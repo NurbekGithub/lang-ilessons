@@ -12,6 +12,6 @@ COPY . .
 
 RUN bun run build
 
-CMD ["bun", "run", "server.ts"]
+CMD ["bun", "run", ".output/server/index.mjs"]
 
 EXPOSE 3000
