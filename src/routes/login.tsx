@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { AuthForm } from "@/components/auth-form";
 import { useNavigate } from "@tanstack/react-router";
 import { BookOpen } from "lucide-react";

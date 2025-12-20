@@ -5,13 +5,19 @@ import { useTranslation } from "@/hooks/use-translation";
 import { useSession } from "@/lib/auth-client";
 import { WordSpan } from "@/components/word-span";
 import { TranslationPopup } from "@/components/translation-popup";
+import { isRTL } from "@/components/language-selector";
 
 interface TextDisplayProps {
     text: string;
+    sourceLanguage?: string;
     targetLanguage?: string;
 }
 
-export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
+export function TextDisplay({
+    text,
+    sourceLanguage = "auto",
+    targetLanguage = "en"
+}: TextDisplayProps) {
     const tokens = useMemo(() => tokenize(text), [text]);
     const { data: session } = useSession();
 
@@ -23,6 +29,7 @@ export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
         isWordSelected,
     } = useWordSelection();
 
+    // Passing sourceLanguage to useTranslation if it's not "auto"
     const { translate, isLoading, error, result, clearResult } = useTranslation({
         targetLanguage,
     });
@@ -39,9 +46,10 @@ export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
     // Trigger translation when selection changes
     useEffect(() => {
         if (selectedText) {
-            translate(selectedText);
+            // Use the provided sourceLanguage or "auto"
+            translate(selectedText, sourceLanguage);
         }
-    }, [selectedText, translate]);
+    }, [selectedText, translate, sourceLanguage]);
 
     // Handle word click - track position for popup
     const onWordClick = useCallback(
@@ -78,6 +86,7 @@ export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
                     userId: session.user.id,
                     originalText,
                     translatedText,
+                    sourceLanguage: sourceLanguage === "auto" ? undefined : sourceLanguage,
                     targetLanguage,
                     context: text.length <= 200 ? text : undefined,
                 }),
@@ -87,7 +96,7 @@ export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
                 throw new Error("Failed to save to vocabulary");
             }
         },
-        [session?.user?.id, targetLanguage, text]
+        [session?.user?.id, targetLanguage, text, sourceLanguage]
     );
 
     // Close popup when clicking outside
@@ -105,10 +114,15 @@ export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
         }
     }, [showPopup, handleClosePopup]);
 
+    const rtl = useMemo(() => isRTL(sourceLanguage), [sourceLanguage]);
+
     return (
         <div className="relative" data-text-display>
             {/* Text with clickable words */}
-            <div className="text-lg leading-relaxed">
+            <div
+                className={`text-lg leading-relaxed ${rtl ? "text-right" : "text-left"}`}
+                dir={rtl ? "rtl" : "ltr"}
+            >
                 {tokens.map((token) => {
                     if (token.type === "word") {
                         return (

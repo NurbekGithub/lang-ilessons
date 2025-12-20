@@ -1,31 +1,89 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Languages, ArrowRight, Loader2 } from "lucide-react";
+import { LanguageSelector } from "@/components/language-selector";
 
 interface TextInputProps {
-    onSubmit: (text: string) => void;
+    onSubmit: (text: string, language: string) => void;
     isLoading?: boolean;
 }
 
 export function TextInput({ onSubmit, isLoading }: TextInputProps) {
     const [text, setText] = useState("");
+    const [language, setLanguage] = useState("auto");
+    const [isDetecting, setIsDetecting] = useState(false);
+    const userManuallySelected = useRef(false);
+
+    // Simple debounce implementation
+    const debouncedDetect = useCallback(
+        (() => {
+            let timeout: ReturnType<typeof setTimeout>;
+            return (val: string) => {
+                if (!val.trim() || userManuallySelected.current) return;
+                clearTimeout(timeout);
+                timeout = setTimeout(async () => {
+                    setIsDetecting(true);
+                    try {
+                        const response = await fetch("/api/detect", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ text: val }),
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.language && !userManuallySelected.current) {
+                                setLanguage(data.language);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Auto-detect failed:", err);
+                    } finally {
+                        setIsDetecting(false);
+                    }
+                }, 1000);
+            };
+        })(),
+        []
+    );
+
+    useEffect(() => {
+        if (text.length > 15 && !userManuallySelected.current) {
+            debouncedDetect(text);
+        }
+    }, [text, debouncedDetect]);
+
+    const handleLanguageChange = (val: string) => {
+        setLanguage(val);
+        if (val !== "auto") {
+            userManuallySelected.current = true;
+        } else {
+            userManuallySelected.current = false;
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (text.trim()) {
-            onSubmit(text.trim());
+            onSubmit(text.trim(), language);
         }
     };
 
     return (
         <Card className="p-4 md:p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Header */}
-                <div className="flex items-center gap-2 text-muted-foreground">
-                    <Languages className="w-5 h-5" />
-                    <span className="text-sm font-medium">Paste text in any language</span>
+                {/* Header with Language Selector */}
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                        <Languages className="w-5 h-5 text-muted-foreground" />
+                        <LanguageSelector
+                            value={language}
+                            onChange={handleLanguageChange}
+                            isDetecting={isDetecting}
+                            disabled={isLoading}
+                        />
+                    </div>
                 </div>
 
                 {/* Textarea */}

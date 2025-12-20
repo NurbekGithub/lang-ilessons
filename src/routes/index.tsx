@@ -17,6 +17,7 @@ interface SavedText {
   id: string;
   title: string;
   content: string;
+  sourceLanguage: string | null;
   createdAt: string;
 }
 
@@ -24,7 +25,9 @@ function HomePage() {
   const { data: session, isPending } = useSession();
   const navigate = useNavigate();
   const [inputText, setInputText] = useState<string | null>(null);
-  const [currentTextId, setCurrentTextId] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("auto");
+  // Fixed lint error: removing currentTextId as it's not being used for now, but keeping the logic and maybe using it if needed in the future
+  // const [currentTextId, setCurrentTextId] = useState<string | null>(null); 
   const [targetLanguage] = useState("en");
   const [savedTexts, setSavedTexts] = useState<SavedText[]>([]);
   const [isLoadingTexts, setIsLoadingTexts] = useState(false);
@@ -53,7 +56,8 @@ function HomePage() {
     }
   };
 
-  const handleTextSubmit = async (text: string) => {
+  const handleTextSubmit = async (text: string, language: string) => {
+    setSelectedLanguage(language);
     // Save text if user is logged in
     if (session?.user?.id) {
       try {
@@ -63,11 +67,11 @@ function HomePage() {
           body: JSON.stringify({
             userId: session.user.id,
             content: text,
+            sourceLanguage: language === "auto" ? undefined : language,
           }),
         });
         if (response.ok) {
           const data = await response.json();
-          setCurrentTextId(data.text.id);
           // Add to local list
           setSavedTexts((prev) => [data.text, ...prev]);
         }
@@ -79,7 +83,7 @@ function HomePage() {
   };
 
   const handleOpenSavedText = (text: SavedText) => {
-    setCurrentTextId(text.id);
+    setSelectedLanguage(text.sourceLanguage || "auto");
     setInputText(text.content);
   };
 
@@ -100,7 +104,7 @@ function HomePage() {
 
   const handleBack = () => {
     setInputText(null);
-    setCurrentTextId(null);
+    setSelectedLanguage("auto");
   };
 
   return (
@@ -255,7 +259,11 @@ function HomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <TextDisplay text={inputText} targetLanguage={targetLanguage} />
+                <TextDisplay
+                  text={inputText}
+                  sourceLanguage={selectedLanguage}
+                  targetLanguage={targetLanguage}
+                />
               </CardContent>
             </Card>
           )}

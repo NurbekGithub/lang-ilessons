@@ -1,4 +1,5 @@
 const LIBRETRANSLATE_URL = process.env.LIBRETRANSLATE_URL || "https://libretranslate.com";
+const LIBRETRANSLATE_API_KEY = process.env.LIBRETRANSLATE_API_KEY;
 
 export interface TranslateOptions {
     text: string;
@@ -29,6 +30,7 @@ export async function translateText(options: TranslateOptions): Promise<Translat
             alternatives: 3,
             target: targetLanguage,
             format: "text",
+            api_key: LIBRETRANSLATE_API_KEY,
         }),
     });
 
@@ -55,7 +57,10 @@ export async function detectLanguage(text: string): Promise<string> {
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ q: text }),
+        body: JSON.stringify({
+            q: text,
+            api_key: LIBRETRANSLATE_API_KEY,
+        }),
     });
 
     if (!response.ok) {
