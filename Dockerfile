@@ -10,7 +10,7 @@ RUN bun install
 # Copy app
 COPY . .
 
-RUN bun build
+RUN bun run build
 
 CMD ["bun", "run", "server.ts"]
 
