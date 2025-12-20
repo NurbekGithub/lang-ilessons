@@ -1,5 +1,7 @@
-import { Loader2, X } from "lucide-react";
+import { useState } from "react";
+import { Loader2, X, BookmarkPlus, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface TranslationPopupProps {
     originalText: string;
@@ -8,6 +10,7 @@ interface TranslationPopupProps {
     error?: string | null;
     position: { x: number; y: number };
     onClose: () => void;
+    onSaveToVocabulary?: (originalText: string, translatedText: string) => Promise<void>;
 }
 
 export function TranslationPopup({
@@ -17,7 +20,25 @@ export function TranslationPopup({
     error,
     position,
     onClose,
+    onSaveToVocabulary,
 }: TranslationPopupProps) {
+    const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+
+    const handleSave = async () => {
+        if (!onSaveToVocabulary || !translatedText) return;
+
+        setIsSaving(true);
+        try {
+            await onSaveToVocabulary(originalText, translatedText);
+            setIsSaved(true);
+        } catch (err) {
+            console.error("Failed to save to vocabulary:", err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return (
         <div
             className="fixed z-50 animate-in fade-in-0 zoom-in-95 duration-200"
@@ -73,6 +94,37 @@ export function TranslationPopup({
                         </p>
                     )}
                 </div>
+
+                {/* Save to Vocabulary Button */}
+                {!isLoading && !error && translatedText && onSaveToVocabulary && (
+                    <>
+                        <div className="h-px bg-border my-3" />
+                        <Button
+                            variant={isSaved ? "secondary" : "outline"}
+                            size="sm"
+                            className="w-full gap-2"
+                            onClick={handleSave}
+                            disabled={isSaving || isSaved}
+                        >
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Saving...
+                                </>
+                            ) : isSaved ? (
+                                <>
+                                    <Check className="w-4 h-4" />
+                                    Saved to Vocabulary
+                                </>
+                            ) : (
+                                <>
+                                    <BookmarkPlus className="w-4 h-4" />
+                                    Save to Vocabulary
+                                </>
+                            )}
+                        </Button>
+                    </>
+                )}
             </Card>
         </div>
     );

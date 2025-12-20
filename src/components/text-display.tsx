@@ -2,6 +2,7 @@ import { useMemo, useCallback, useState, useEffect } from "react";
 import { tokenize } from "@/lib/tokenizer";
 import { useWordSelection } from "@/hooks/use-word-selection";
 import { useTranslation } from "@/hooks/use-translation";
+import { useSession } from "@/lib/auth-client";
 import { WordSpan } from "@/components/word-span";
 import { TranslationPopup } from "@/components/translation-popup";
 
@@ -12,6 +13,7 @@ interface TextDisplayProps {
 
 export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
     const tokens = useMemo(() => tokenize(text), [text]);
+    const { data: session } = useSession();
 
     const {
         selection,
@@ -61,6 +63,32 @@ export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
         clearSelection();
         clearResult();
     }, [clearSelection, clearResult]);
+
+    // Save to vocabulary via API
+    const handleSaveToVocabulary = useCallback(
+        async (originalText: string, translatedText: string) => {
+            if (!session?.user?.id) {
+                throw new Error("Please sign in to save words");
+            }
+
+            const response = await fetch("/api/vocabulary", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: session.user.id,
+                    originalText,
+                    translatedText,
+                    targetLanguage,
+                    context: text.length <= 200 ? text : undefined,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to save to vocabulary");
+            }
+        },
+        [session?.user?.id, targetLanguage, text]
+    );
 
     // Close popup when clicking outside
     useEffect(() => {
@@ -112,6 +140,7 @@ export function TextDisplay({ text, targetLanguage = "en" }: TextDisplayProps) {
                         error={error}
                         position={popupPosition}
                         onClose={handleClosePopup}
+                        onSaveToVocabulary={session?.user ? handleSaveToVocabulary : undefined}
                     />
                 </div>
             )}

@@ -10,6 +10,8 @@ export const user = pgTable("user", {
     email: text("email").notNull().unique(),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
+    username: text("username").unique(),
+    displayUsername: text("display_username"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -80,4 +82,19 @@ export const translation = pgTable("translation", {
     sourceLanguage: text("source_language").notNull(),
     targetLanguage: text("target_language").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const vocabulary = pgTable("vocabulary", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+        .notNull()
+        .references(() => user.id, { onDelete: "cascade" }),
+    originalText: text("original_text").notNull(),
+    translatedText: text("translated_text").notNull(),
+    sourceLanguage: text("source_language"),
+    targetLanguage: text("target_language").notNull().default("en"),
+    context: text("context"), // Optional: the sentence/context where user found this word
+    notes: text("notes"), // Optional: user notes
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -55,7 +55,13 @@ function HomePage() {
           )}
 
           {session?.user && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <a
+                href="/vocabulary"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                My Vocabulary
+              </a>
               {session.user.image && (
                 <img
                   src={session.user.image}
