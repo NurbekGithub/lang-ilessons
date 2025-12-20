@@ -12,6 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiVocabularyRouteImport } from './routes/api/vocabulary'
+import { Route as ApiTranslateRouteImport } from './routes/api/translate'
+import { Route as ApiTextsRouteImport } from './routes/api/texts'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const VocabularyRoute = VocabularyRouteImport.update({
   id: '/vocabulary',
@@ -28,35 +32,93 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiVocabularyRoute = ApiVocabularyRouteImport.update({
+  id: '/api/vocabulary',
+  path: '/api/vocabulary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTranslateRoute = ApiTranslateRouteImport.update({
+  id: '/api/translate',
+  path: '/api/translate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTextsRoute = ApiTextsRouteImport.update({
+  id: '/api/texts',
+  path: '/api/texts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vocabulary': typeof VocabularyRoute
+  '/api/texts': typeof ApiTextsRoute
+  '/api/translate': typeof ApiTranslateRoute
+  '/api/vocabulary': typeof ApiVocabularyRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vocabulary': typeof VocabularyRoute
+  '/api/texts': typeof ApiTextsRoute
+  '/api/translate': typeof ApiTranslateRoute
+  '/api/vocabulary': typeof ApiVocabularyRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vocabulary': typeof VocabularyRoute
+  '/api/texts': typeof ApiTextsRoute
+  '/api/translate': typeof ApiTranslateRoute
+  '/api/vocabulary': typeof ApiVocabularyRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/vocabulary'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/vocabulary'
+    | '/api/texts'
+    | '/api/translate'
+    | '/api/vocabulary'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/vocabulary'
-  id: '__root__' | '/' | '/login' | '/vocabulary'
+  to:
+    | '/'
+    | '/login'
+    | '/vocabulary'
+    | '/api/texts'
+    | '/api/translate'
+    | '/api/vocabulary'
+    | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/vocabulary'
+    | '/api/texts'
+    | '/api/translate'
+    | '/api/vocabulary'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   VocabularyRoute: typeof VocabularyRoute
+  ApiTextsRoute: typeof ApiTextsRoute
+  ApiTranslateRoute: typeof ApiTranslateRoute
+  ApiVocabularyRoute: typeof ApiVocabularyRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +144,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/vocabulary': {
+      id: '/api/vocabulary'
+      path: '/api/vocabulary'
+      fullPath: '/api/vocabulary'
+      preLoaderRoute: typeof ApiVocabularyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/translate': {
+      id: '/api/translate'
+      path: '/api/translate'
+      fullPath: '/api/translate'
+      preLoaderRoute: typeof ApiTranslateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/texts': {
+      id: '/api/texts'
+      path: '/api/texts'
+      fullPath: '/api/texts'
+      preLoaderRoute: typeof ApiTextsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +179,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   VocabularyRoute: VocabularyRoute,
+  ApiTextsRoute: ApiTextsRoute,
+  ApiTranslateRoute: ApiTranslateRoute,
+  ApiVocabularyRoute: ApiVocabularyRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

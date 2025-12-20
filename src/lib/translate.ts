@@ -9,6 +9,7 @@ export interface TranslateOptions {
 export interface TranslateResult {
     translatedText: string;
     detectedLanguage?: string;
+    alternatives?: string[];
 }
 
 /**
@@ -25,6 +26,7 @@ export async function translateText(options: TranslateOptions): Promise<Translat
         body: JSON.stringify({
             q: text,
             source: sourceLanguage,
+            alternatives: 3,
             target: targetLanguage,
             format: "text",
         }),
@@ -40,6 +42,7 @@ export async function translateText(options: TranslateOptions): Promise<Translat
     return {
         translatedText: data.translatedText,
         detectedLanguage: data.detectedLanguage?.language,
+        alternatives: data.alternatives,
     };
 }
 

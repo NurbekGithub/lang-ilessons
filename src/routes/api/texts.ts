@@ -1,14 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { addToVocabulary, getVocabularyList, deleteVocabularyItemById } from "@/lib/vocabulary";
+import { saveText, getSavedTexts, getSavedTextById, deleteSavedText } from "@/lib/saved-texts";
 
-export const Route = createFileRoute("/api/vocabulary")({
+export const Route = createFileRoute("/api/texts")({
     server: {
         handlers: {
             GET: async ({ request }) => {
                 try {
                     const url = new URL(request.url);
                     const userId = url.searchParams.get("userId");
+                    const id = url.searchParams.get("id");
 
+                    // Get single text by ID
+                    if (id) {
+                        const text = await getSavedTextById(id);
+                        if (!text) {
+                            return new Response(
+                                JSON.stringify({ error: "Text not found" }),
+                                { status: 404, headers: { "Content-Type": "application/json" } }
+                            );
+                        }
+                        return new Response(
+                            JSON.stringify({ text }),
+                            { status: 200, headers: { "Content-Type": "application/json" } }
+                        );
+                    }
+
+                    // Get all texts for user
                     if (!userId) {
                         return new Response(
                             JSON.stringify({ error: "userId is required" }),
@@ -16,15 +33,15 @@ export const Route = createFileRoute("/api/vocabulary")({
                         );
                     }
 
-                    const items = await getVocabularyList(userId);
+                    const texts = await getSavedTexts(userId);
                     return new Response(
-                        JSON.stringify({ items }),
+                        JSON.stringify({ texts }),
                         { status: 200, headers: { "Content-Type": "application/json" } }
                     );
                 } catch (error) {
-                    console.error("Failed to get vocabulary:", error);
+                    console.error("Failed to get texts:", error);
                     return new Response(
-                        JSON.stringify({ error: "Failed to get vocabulary" }),
+                        JSON.stringify({ error: "Failed to get texts" }),
                         { status: 500, headers: { "Content-Type": "application/json" } }
                     );
                 }
@@ -33,32 +50,30 @@ export const Route = createFileRoute("/api/vocabulary")({
             POST: async ({ request }) => {
                 try {
                     const body = await request.json();
-                    const { userId, originalText, translatedText, sourceLanguage, targetLanguage, context } = body;
+                    const { userId, content, title, sourceLanguage } = body;
 
-                    if (!userId || !originalText || !translatedText || !targetLanguage) {
+                    if (!userId || !content) {
                         return new Response(
-                            JSON.stringify({ error: "Missing required fields" }),
+                            JSON.stringify({ error: "userId and content are required" }),
                             { status: 400, headers: { "Content-Type": "application/json" } }
                         );
                     }
 
-                    const item = await addToVocabulary({
+                    const text = await saveText({
                         userId,
-                        originalText,
-                        translatedText,
+                        content,
+                        title,
                         sourceLanguage,
-                        targetLanguage,
-                        context,
                     });
 
                     return new Response(
-                        JSON.stringify({ success: true, item }),
+                        JSON.stringify({ success: true, text }),
                         { status: 201, headers: { "Content-Type": "application/json" } }
                     );
                 } catch (error) {
-                    console.error("Failed to add to vocabulary:", error);
+                    console.error("Failed to save text:", error);
                     return new Response(
-                        JSON.stringify({ error: "Failed to add to vocabulary" }),
+                        JSON.stringify({ error: "Failed to save text" }),
                         { status: 500, headers: { "Content-Type": "application/json" } }
                     );
                 }
@@ -76,15 +91,15 @@ export const Route = createFileRoute("/api/vocabulary")({
                         );
                     }
 
-                    await deleteVocabularyItemById(id);
+                    await deleteSavedText(id);
                     return new Response(
                         JSON.stringify({ success: true }),
                         { status: 200, headers: { "Content-Type": "application/json" } }
                     );
                 } catch (error) {
-                    console.error("Failed to delete vocabulary item:", error);
+                    console.error("Failed to delete text:", error);
                     return new Response(
-                        JSON.stringify({ error: "Failed to delete vocabulary item" }),
+                        JSON.stringify({ error: "Failed to delete text" }),
                         { status: 500, headers: { "Content-Type": "application/json" } }
                     );
                 }
