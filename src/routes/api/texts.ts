@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { saveText, getSavedTexts, getSavedTextById, deleteSavedText } from "@/lib/saved-texts";
+import { saveText, getSavedTexts, getSavedTextById, deleteSavedText, updateSavedText } from "@/lib/saved-texts";
 
 export const Route = createFileRoute("/api/texts")({
     server: {
@@ -100,6 +100,40 @@ export const Route = createFileRoute("/api/texts")({
                     console.error("Failed to delete text:", error);
                     return new Response(
                         JSON.stringify({ error: "Failed to delete text" }),
+                        { status: 500, headers: { "Content-Type": "application/json" } }
+                    );
+                }
+            },
+
+            PATCH: async ({ request }) => {
+                try {
+                    const url = new URL(request.url);
+                    const id = url.searchParams.get("id");
+                    const body = await request.json();
+
+                    if (!id) {
+                        return new Response(
+                            JSON.stringify({ error: "id is required" }),
+                            { status: 400, headers: { "Content-Type": "application/json" } }
+                        );
+                    }
+
+                    const text = await updateSavedText(id, body);
+                    if (!text) {
+                        return new Response(
+                            JSON.stringify({ error: "Text not found" }),
+                            { status: 404, headers: { "Content-Type": "application/json" } }
+                        );
+                    }
+
+                    return new Response(
+                        JSON.stringify({ success: true, text }),
+                        { status: 200, headers: { "Content-Type": "application/json" } }
+                    );
+                } catch (error) {
+                    console.error("Failed to update text:", error);
+                    return new Response(
+                        JSON.stringify({ error: "Failed to update text" }),
                         { status: 500, headers: { "Content-Type": "application/json" } }
                     );
                 }

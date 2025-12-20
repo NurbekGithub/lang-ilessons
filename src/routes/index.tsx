@@ -5,7 +5,7 @@ import { TextInput } from "@/components/text-input";
 import { TextDisplay } from "@/components/text-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, FileText, Trash2, Loader2, Edit2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -26,8 +26,8 @@ function HomePage() {
   const navigate = useNavigate();
   const [inputText, setInputText] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("auto");
-  // Fixed lint error: removing currentTextId as it's not being used for now, but keeping the logic and maybe using it if needed in the future
-  // const [currentTextId, setCurrentTextId] = useState<string | null>(null); 
+  const [currentTextId, setCurrentTextId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [targetLanguage] = useState("en");
   const [savedTexts, setSavedTexts] = useState<SavedText[]>([]);
   const [isLoadingTexts, setIsLoadingTexts] = useState(false);
@@ -58,8 +58,28 @@ function HomePage() {
 
   const handleTextSubmit = async (text: string, language: string) => {
     setSelectedLanguage(language);
-    // Save text if user is logged in
-    if (session?.user?.id) {
+
+    if (isEditing && currentTextId) {
+      // Update existing text
+      try {
+        const response = await fetch(`/api/texts?id=${currentTextId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: text,
+            sourceLanguage: language === "auto" ? undefined : language,
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSavedTexts((prev) => prev.map((t) => (t.id === currentTextId ? data.text : t)));
+          setIsEditing(false);
+        }
+      } catch (err) {
+        console.error("Failed to update text:", err);
+      }
+    } else if (session?.user?.id) {
+      // Save new text
       try {
         const response = await fetch("/api/texts", {
           method: "POST",
@@ -72,8 +92,8 @@ function HomePage() {
         });
         if (response.ok) {
           const data = await response.json();
-          // Add to local list
           setSavedTexts((prev) => [data.text, ...prev]);
+          setCurrentTextId(data.text.id);
         }
       } catch (err) {
         console.error("Failed to save text:", err);
@@ -85,6 +105,8 @@ function HomePage() {
   const handleOpenSavedText = (text: SavedText) => {
     setSelectedLanguage(text.sourceLanguage || "auto");
     setInputText(text.content);
+    setCurrentTextId(text.id);
+    setIsEditing(false);
   };
 
   const handleDeleteText = async (id: string, e: React.MouseEvent) => {
@@ -105,6 +127,8 @@ function HomePage() {
   const handleBack = () => {
     setInputText(null);
     setSelectedLanguage("auto");
+    setCurrentTextId(null);
+    setIsEditing(false);
   };
 
   return (
@@ -251,16 +275,40 @@ function HomePage() {
                 </Card>
               )}
             </div>
+          ) : isEditing ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Edit Text</h2>
+                <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </Button>
+              </div>
+              <TextInput
+                onSubmit={handleTextSubmit}
+                initialText={inputText || ""}
+                initialLanguage={selectedLanguage}
+                submitLabel="Update Text"
+              />
+            </div>
           ) : (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-lg">
                   Tap on words to translate
                 </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                  className="gap-2 h-8"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  Edit
+                </Button>
               </CardHeader>
               <CardContent>
                 <TextDisplay
-                  text={inputText}
+                  text={inputText || ""}
                   sourceLanguage={selectedLanguage}
                   targetLanguage={targetLanguage}
                 />

@@ -3,18 +3,27 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Languages, ArrowRight, Loader2 } from "lucide-react";
-import { LanguageSelector } from "@/components/language-selector";
+import { LanguageSelector, isRTL } from "@/components/language-selector";
 
 interface TextInputProps {
     onSubmit: (text: string, language: string) => void;
     isLoading?: boolean;
+    initialText?: string;
+    initialLanguage?: string;
+    submitLabel?: string;
 }
 
-export function TextInput({ onSubmit, isLoading }: TextInputProps) {
-    const [text, setText] = useState("");
-    const [language, setLanguage] = useState("auto");
+export function TextInput({
+    onSubmit,
+    isLoading,
+    initialText = "",
+    initialLanguage = "auto",
+    submitLabel = "Start Learning"
+}: TextInputProps) {
+    const [text, setText] = useState(initialText);
+    const [language, setLanguage] = useState(initialLanguage);
     const [isDetecting, setIsDetecting] = useState(false);
-    const userManuallySelected = useRef(false);
+    const userManuallySelected = useRef(initialLanguage !== "auto");
 
     // Simple debounce implementation
     const debouncedDetect = useCallback(
@@ -70,6 +79,8 @@ export function TextInput({ onSubmit, isLoading }: TextInputProps) {
         }
     };
 
+    const rtl = isRTL(language);
+
     return (
         <Card className="p-4 md:p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -91,7 +102,8 @@ export function TextInput({ onSubmit, isLoading }: TextInputProps) {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Paste or type your text here... You can use any language - English, Spanish, Chinese, Arabic, Japanese, and more."
-                    className="min-h-[200px] md:min-h-[300px] text-base leading-relaxed resize-none"
+                    className={`min-h-[200px] md:min-h-[300px] text-base leading-relaxed resize-none ${rtl ? "text-right" : "text-left"}`}
+                    dir={rtl ? "rtl" : "ltr"}
                     disabled={isLoading}
                 />
 
@@ -112,7 +124,7 @@ export function TextInput({ onSubmit, isLoading }: TextInputProps) {
                             </>
                         ) : (
                             <>
-                                Start Learning
+                                {submitLabel}
                                 <ArrowRight className="w-4 h-4" />
                             </>
                         )}

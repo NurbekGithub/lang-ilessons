@@ -59,6 +59,23 @@ export async function getSavedTextById(id: string): Promise<SavedText | null> {
     return (items[0] as SavedText) || null;
 }
 
+// Update a saved text
+export async function updateSavedText(id: string, input: Partial<SaveTextInput>): Promise<SavedText | null> {
+    const updateData: any = { ...input };
+    if (input.content && !input.title) {
+        updateData.title = input.content.slice(0, 50) + (input.content.length > 50 ? "..." : "");
+    }
+    updateData.updatedAt = new Date();
+
+    const result = await db
+        .update(savedText)
+        .set(updateData)
+        .where(eq(savedText.id, id))
+        .returning();
+
+    return (result[0] as SavedText) || null;
+}
+
 // Delete a saved text
 export async function deleteSavedText(id: string): Promise<void> {
     await db.delete(savedText).where(eq(savedText.id, id));
