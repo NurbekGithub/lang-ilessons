@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { AuthForm } from "@/components/auth-form";
 import { useNavigate } from "@tanstack/react-router";
 import { BookOpen } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/login")({
     component: LoginPage,
@@ -11,7 +12,11 @@ function LoginPage() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/30">
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/30 relative">
+            {/* Theme Toggle */}
+            <div className="absolute top-4 right-4">
+                <ThemeToggle />
+            </div>
             {/* Logo/Brand */}
             <div className="flex items-center gap-3 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">

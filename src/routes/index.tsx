@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileText, Trash2, Loader2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -134,6 +135,7 @@ function HomePage() {
               >
                 My Vocabulary
               </a>
+              <ThemeToggle />
               {session.user.image && (
                 <img
                   src={session.user.image}
@@ -148,13 +150,16 @@ function HomePage() {
           )}
 
           {!session && !isPending && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate({ to: "/login" })}
-            >
-              Sign In
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate({ to: "/login" })}
+              >
+                Sign In
+              </Button>
+            </div>
           )}
         </header>
 
