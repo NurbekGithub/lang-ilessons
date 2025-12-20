@@ -14,6 +14,7 @@
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "@fontsource-variable/inter": "^5.2.8",
+    "@neondatabase/serverless": "^1.0.2",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-devtools": "^0.7.0",
     "@tanstack/react-router": "^1.132.0",
@@ -27,6 +28,7 @@
     "drizzle-orm": "^1.0.0-beta.3-702eadc",
     "lucide-react": "^0.562.0",
     "nitro": "latest",
+    "postgres": "^3.4.7",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "shadcn": "^3.6.2",

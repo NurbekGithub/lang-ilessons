@@ -15,7 +15,11 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'LangLessons - Learn Any Language',
+      },
+      {
+        name: 'description',
+        content: 'Paste text in any language and tap words to translate. Build your vocabulary naturally.',
       },
     ],
     links: [
