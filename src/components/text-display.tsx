@@ -6,6 +6,7 @@ import { useSession } from "@/lib/auth-client";
 import { WordSpan } from "@/components/word-span";
 import { TranslationPopup } from "@/components/translation-popup";
 import { isRTL } from "@/components/language-selector";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 
 interface TextDisplayProps {
     text: string;
@@ -34,8 +35,8 @@ export function TextDisplay({
         targetLanguage,
     });
 
-    const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
     const [showPopup, setShowPopup] = useState(false);
+    const [activeTriggerId, setActiveTriggerId] = useState<string | null>(null);
 
     // Get the currently selected text
     const selectedText = useMemo(() => {
@@ -51,14 +52,10 @@ export function TextDisplay({
         }
     }, [selectedText, translate, sourceLanguage]);
 
-    // Handle word click - track position for popup
+    // Handle word click
     const onWordClick = useCallback(
-        (wordIndex: number, event: React.MouseEvent) => {
-            const rect = (event.target as HTMLElement).getBoundingClientRect();
-            setPopupPosition({
-                x: rect.left + window.scrollX,
-                y: rect.bottom + window.scrollY,
-            });
+        (wordIndex: number) => {
+            setActiveTriggerId(`word-${wordIndex}`);
             setShowPopup(true);
             handleWordClick(wordIndex);
         },
@@ -68,6 +65,7 @@ export function TextDisplay({
     // Close popup and clear selection
     const handleClosePopup = useCallback(() => {
         setShowPopup(false);
+        setActiveTriggerId(null);
         clearSelection();
         clearResult();
     }, [clearSelection, clearResult]);
@@ -99,54 +97,54 @@ export function TextDisplay({
         [session?.user?.id, targetLanguage, text, sourceLanguage]
     );
 
-    // Close popup when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            if (!target.closest("[data-text-display]") && !target.closest("[data-popup]")) {
-                handleClosePopup();
-            }
-        };
-
-        if (showPopup) {
-            document.addEventListener("click", handleClickOutside);
-            return () => document.removeEventListener("click", handleClickOutside);
+    // Simple open change handler
+    const onOpenChange = useCallback((open: boolean) => {
+        if (!open) {
+            handleClosePopup();
+        } else {
+            setShowPopup(true);
         }
-    }, [showPopup, handleClosePopup]);
+    }, [handleClosePopup]);
 
     const rtl = useMemo(() => isRTL(sourceLanguage), [sourceLanguage]);
 
     return (
-        <div className="relative" data-text-display>
-            {/* Text with clickable words */}
-            <div
-                className={`text-lg leading-relaxed ${rtl ? "text-right" : "text-left"}`}
-                dir={rtl ? "rtl" : "ltr"}
-            >
-                {tokens.map((token) => {
-                    if (token.type === "word") {
+        <Popover open={showPopup} onOpenChange={onOpenChange} triggerId={activeTriggerId}>
+            <div className="relative" data-text-display>
+                {/* Text with clickable words */}
+                <div
+                    className={`text-lg leading-relaxed ${rtl ? "text-right" : "text-left"}`}
+                    dir={rtl ? "rtl" : "ltr"}
+                >
+                    {tokens.map((token) => {
+                        if (token.type === "word") {
+                            return (
+                                <PopoverTrigger
+                                    key={token.index}
+                                    id={`word-${token.index}`}
+                                    render={(props) => (
+                                        <WordSpan
+                                            {...props}
+                                            word={token.value}
+                                            index={token.index}
+                                            isSelected={isWordSelected(token.index)}
+                                            onClick={onWordClick}
+                                        />
+                                    )}
+                                />
+                            );
+                        }
+                        // Render whitespace and punctuation as-is
                         return (
-                            <WordSpan
-                                key={token.index}
-                                word={token.value}
-                                index={token.index}
-                                isSelected={isWordSelected(token.index)}
-                                onClick={onWordClick}
-                            />
+                            <span key={token.index} className="whitespace-pre-wrap">
+                                {token.value}
+                            </span>
                         );
-                    }
-                    // Render whitespace and punctuation as-is
-                    return (
-                        <span key={token.index} className="whitespace-pre-wrap">
-                            {token.value}
-                        </span>
-                    );
-                })}
-            </div>
+                    })}
+                </div>
 
-            {/* Translation Popup */}
-            {showPopup && selectedText && (
-                <div data-popup>
+                {/* Translation Popup */}
+                {selectedText && (
                     <TranslationPopup
                         originalText={selectedText}
                         translatedText={result?.translatedText}
@@ -154,12 +152,10 @@ export function TextDisplay({
                         alternatives={result?.alternatives}
                         isLoading={isLoading}
                         error={error}
-                        position={popupPosition}
-                        onClose={handleClosePopup}
                         onSaveToVocabulary={session?.user ? handleSaveToVocabulary : undefined}
                     />
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </Popover>
     );
 }
