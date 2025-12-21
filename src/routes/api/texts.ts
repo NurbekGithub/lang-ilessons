@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { saveText, getSavedTexts, getSavedTextById, deleteSavedText, updateSavedText } from "@/lib/saved-texts";
+import { saveText, getSavedTexts, getSavedTextById, deleteSavedText, updateSavedText, getPublicStories } from "@/lib/saved-texts";
 
 export const Route = createFileRoute("/api/texts")({
     server: {
@@ -9,6 +9,7 @@ export const Route = createFileRoute("/api/texts")({
                     const url = new URL(request.url);
                     const userId = url.searchParams.get("userId");
                     const id = url.searchParams.get("id");
+                    const isPublicRequest = url.searchParams.get("public") === "true";
 
                     // Get single text by ID
                     if (id) {
@@ -21,6 +22,15 @@ export const Route = createFileRoute("/api/texts")({
                         }
                         return new Response(
                             JSON.stringify({ text }),
+                            { status: 200, headers: { "Content-Type": "application/json" } }
+                        );
+                    }
+
+                    // Get all public stories
+                    if (isPublicRequest) {
+                        const texts = await getPublicStories();
+                        return new Response(
+                            JSON.stringify({ texts }),
                             { status: 200, headers: { "Content-Type": "application/json" } }
                         );
                     }
@@ -50,7 +60,7 @@ export const Route = createFileRoute("/api/texts")({
             POST: async ({ request }) => {
                 try {
                     const body = await request.json();
-                    const { userId, content, title, sourceLanguage } = body;
+                    const { userId, content, title, sourceLanguage, isPublic } = body;
 
                     if (!userId || !content) {
                         return new Response(
@@ -64,6 +74,7 @@ export const Route = createFileRoute("/api/texts")({
                         content,
                         title,
                         sourceLanguage,
+                        isPublic: isPublic === true,
                     });
 
                     return new Response(

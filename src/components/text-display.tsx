@@ -113,7 +113,7 @@ export function TextDisplay({
             <div className="relative" data-text-display>
                 {/* Text with clickable words */}
                 <div
-                    className={`text-lg leading-relaxed ${rtl ? "text-right" : "text-left"}`}
+                    className={`text-lg pb-72 leading-relaxed ${rtl ? "text-right" : "text-left"}`}
                     dir={rtl ? "rtl" : "ltr"}
                 >
                     {tokens.map((token) => {

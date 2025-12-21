@@ -4,13 +4,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Languages, ArrowRight, Loader2 } from "lucide-react";
 import { LanguageSelector, isRTL } from "@/components/language-selector";
+import { useSession } from "@/lib/auth-client";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface TextInputProps {
-    onSubmit: (text: string, language: string) => void;
+    onSubmit: (text: string, language: string, isPublic?: boolean) => void;
     isLoading?: boolean;
     initialText?: string;
     initialLanguage?: string;
+    isPublic?: boolean;
     submitLabel?: string;
+    showPublicOption?: boolean;
 }
 
 export function TextInput({
@@ -18,10 +23,14 @@ export function TextInput({
     isLoading,
     initialText = "",
     initialLanguage = "auto",
-    submitLabel = "Start Learning"
+    isPublic: initialIsPublic = false,
+    submitLabel = "Start Learning",
+    showPublicOption = true,
 }: TextInputProps) {
+    const { data: session } = useSession();
     const [text, setText] = useState(initialText);
     const [language, setLanguage] = useState(initialLanguage);
+    const [isPublic, setIsPublic] = useState(initialIsPublic);
     const [isDetecting, setIsDetecting] = useState(false);
     const userManuallySelected = useRef(initialLanguage !== "auto");
 
@@ -75,7 +84,7 @@ export function TextInput({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (text.trim()) {
-            onSubmit(text.trim(), language);
+            onSubmit(text.trim(), language, isPublic);
         }
     };
 
@@ -107,11 +116,28 @@ export function TextInput({
                     disabled={isLoading}
                 />
 
-                {/* Character count and submit */}
-                <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">
-                        {text.length} characters
-                    </span>
+                {/* Character count, Public option, and submit */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                        <span className="text-xs text-muted-foreground">
+                            {text.length} characters
+                        </span>
+                        {session?.user && showPublicOption && (
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="isPublic"
+                                    checked={isPublic}
+                                    onCheckedChange={(checked: boolean | "indeterminate") => setIsPublic(checked === true)}
+                                />
+                                <Label
+                                    htmlFor="isPublic"
+                                    className="text-sm font-medium leading-none cursor-pointer text-muted-foreground"
+                                >
+                                    Make Public
+                                </Label>
+                            </div>
+                        )}
+                    </div>
                     <Button
                         type="submit"
                         disabled={!text.trim() || isLoading}

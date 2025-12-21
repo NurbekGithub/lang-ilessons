@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, uuid, pgEnum } from "drizzle-orm/pg-core";
 
 // ============================================
 // better-auth tables (required by better-auth)
@@ -60,6 +60,8 @@ export const verification = pgTable("verification", {
 // App-specific tables
 // ============================================
 
+export const storyStatusEnum = pgEnum("story_status", ["draft", "denied", "published"]);
+
 export const savedText = pgTable("saved_text", {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: text("user_id")
@@ -68,6 +70,8 @@ export const savedText = pgTable("saved_text", {
     content: text("content").notNull(),
     sourceLanguage: text("source_language"), // detected or user-specified
     title: text("title"),
+    isPublic: boolean("is_public").notNull().default(false),
+    status: storyStatusEnum("status").notNull().default("draft"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

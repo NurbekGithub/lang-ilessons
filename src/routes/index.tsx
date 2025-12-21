@@ -5,7 +5,7 @@ import { TextInput } from "@/components/text-input";
 import { TextDisplay } from "@/components/text-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Trash2, Loader2, Edit2 } from "lucide-react";
+import { ArrowLeft, FileText, Trash2, Loader2, Edit2, Languages } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -18,6 +18,8 @@ interface SavedText {
   title: string;
   content: string;
   sourceLanguage: string | null;
+  isPublic?: boolean;
+  status?: "draft" | "denied" | "published";
   createdAt: string;
 }
 
@@ -30,8 +32,15 @@ function HomePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [targetLanguage] = useState("en");
   const [savedTexts, setSavedTexts] = useState<SavedText[]>([]);
+  const [publicStories, setPublicStories] = useState<SavedText[]>([]);
   const [isLoadingTexts, setIsLoadingTexts] = useState(false);
+  const [isLoadingPublic, setIsLoadingPublic] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Load public stories for everyone
+  useEffect(() => {
+    loadPublicStories();
+  }, []);
 
   // Load saved texts when user is logged in
   useEffect(() => {
@@ -56,7 +65,22 @@ function HomePage() {
     }
   };
 
-  const handleTextSubmit = async (text: string, language: string) => {
+  const loadPublicStories = async () => {
+    setIsLoadingPublic(true);
+    try {
+      const response = await fetch("/api/texts?public=true");
+      if (response.ok) {
+        const data = await response.json();
+        setPublicStories(data.texts);
+      }
+    } catch (err) {
+      console.error("Failed to load public stories:", err);
+    } finally {
+      setIsLoadingPublic(false);
+    }
+  };
+
+  const handleTextSubmit = async (text: string, language: string, isPublic?: boolean) => {
     setSelectedLanguage(language);
 
     if (isEditing && currentTextId) {
@@ -68,6 +92,7 @@ function HomePage() {
           body: JSON.stringify({
             content: text,
             sourceLanguage: language === "auto" ? undefined : language,
+            isPublic,
           }),
         });
         if (response.ok) {
@@ -88,6 +113,7 @@ function HomePage() {
             userId: session.user.id,
             content: text,
             sourceLanguage: language === "auto" ? undefined : language,
+            isPublic,
           }),
         });
         if (response.ok) {
@@ -194,8 +220,8 @@ function HomePage() {
         {/* Main Content */}
         <main>
           {!inputText ? (
-            <div className="space-y-6">
-              <TextInput onSubmit={handleTextSubmit} />
+            <div className="space-y-8">
+              <TextInput onSubmit={handleTextSubmit} isLoading={isLoadingTexts} />
 
               {/* Saved Texts */}
               {session?.user && (
@@ -250,6 +276,54 @@ function HomePage() {
                 </div>
               )}
 
+              {/* Public Stories */}
+              <div className="space-y-3 pt-6 border-t border-border/50">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Public Stories</h2>
+                  {isLoadingPublic && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                </div>
+
+                {isLoadingPublic && publicStories.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : publicStories.length === 0 ? (
+                  <Card className="bg-muted/30 border-dashed">
+                    <CardContent className="py-8 text-center">
+                      <Languages className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-sm text-muted-foreground">
+                        No public stories available yet
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-2">
+                    {publicStories.map((story) => (
+                      <Card
+                        key={story.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-all hover:shadow-sm"
+                        onClick={() => handleOpenSavedText(story)}
+                      >
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{story.title}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                                {story.sourceLanguage || "Auto"}
+                              </p>
+                              <span className="text-[10px] text-muted-foreground/30">•</span>
+                              <p className="text-[10px] text-muted-foreground">
+                                {new Date(story.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Instructions for non-logged in users */}
               {!session && (
                 <Card className="bg-muted/50 border-dashed">
@@ -285,6 +359,7 @@ function HomePage() {
               </div>
               <TextInput
                 onSubmit={handleTextSubmit}
+                isLoading={isLoadingTexts}
                 initialText={inputText || ""}
                 initialLanguage={selectedLanguage}
                 submitLabel="Update Text"
