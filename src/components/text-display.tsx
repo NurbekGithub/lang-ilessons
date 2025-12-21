@@ -150,6 +150,8 @@ export function TextDisplay({
                     <TranslationPopup
                         originalText={selectedText}
                         translatedText={result?.translatedText}
+                        source={result?.source}
+                        alternatives={result?.alternatives}
                         isLoading={isLoading}
                         error={error}
                         position={popupPosition}

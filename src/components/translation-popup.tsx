@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Loader2, X, BookmarkPlus, Check } from "lucide-react";
+import { Loader2, X, BookmarkPlus, Check, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 interface TranslationPopupProps {
     originalText: string;
     translatedText?: string;
+    source?: "google" | "libretranslate";
+    alternatives?: string[];
     isLoading: boolean;
     error?: string | null;
     position: { x: number; y: number };
@@ -16,6 +18,8 @@ interface TranslationPopupProps {
 export function TranslationPopup({
     originalText,
     translatedText,
+    source,
+    alternatives,
     isLoading,
     error,
     position,
@@ -89,9 +93,40 @@ export function TranslationPopup({
                     )}
 
                     {!isLoading && !error && translatedText && (
-                        <p className="font-medium text-primary break-words">
-                            {translatedText}
-                        </p>
+                        <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                                <p className="font-medium text-primary break-words">
+                                    {translatedText}
+                                </p>
+                                {source === "libretranslate" && (
+                                    <div className="flex shrink-0 items-center justify-center text-amber-500 cursor-help group relative">
+                                        <AlertCircle className="w-4 h-4" />
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-popover border rounded shadow-lg text-[10px] normal-case text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                            Google Translate is currently unavailable. Using degraded backup translation.
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Alternative translations */}
+                            {alternatives && alternatives.length > 0 && (
+                                <div className="space-y-1 pt-1 border-t border-border/50">
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+                                        Alternatives
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {alternatives.map((alt, i) => (
+                                            <span
+                                                key={i}
+                                                className="text-[13px] px-2 py-0.5 bg-muted/50 rounded-full text-muted-foreground border border-border/50"
+                                            >
+                                                {alt}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 

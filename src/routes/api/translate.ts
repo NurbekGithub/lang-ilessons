@@ -34,6 +34,8 @@ export const Route = createFileRoute("/api/translate")({
                             translatedText: result.translatedText,
                             sourceLanguage: result.detectedLanguage || sourceLanguage || "auto",
                             targetLanguage,
+                            source: result.source,
+                            alternatives: result.alternatives,
                         }),
                         { status: 200, headers: { "Content-Type": "application/json" } }
                     );

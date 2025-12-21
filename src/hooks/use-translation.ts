@@ -4,6 +4,8 @@ interface TranslationResult {
     translatedText: string;
     sourceLanguage: string;
     targetLanguage: string;
+    source: "google" | "libretranslate";
+    alternatives?: string[];
 }
 
 interface UseTranslationOptions {
