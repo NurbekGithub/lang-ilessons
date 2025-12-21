@@ -94,6 +94,9 @@ async function translateWithLibre(options: TranslateOptions): Promise<TranslateR
  * Translate text with fallback logic (Google -> LibreTranslate)
  */
 export async function translateText(options: TranslateOptions): Promise<TranslateResult> {
+    if (process.env.NODE_ENV === 'development') {
+        return await translateWithLibre(options);
+    }
     try {
         // Try Google first
         return await translateWithGoogle(options);

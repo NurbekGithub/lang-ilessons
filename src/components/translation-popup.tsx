@@ -47,7 +47,6 @@ export function TranslationPopup({
 
     return (
         <PopoverContent
-            sideOffset={8}
             className="w-72 bg-card/95 backdrop-blur-sm border-primary/20 p-4"
         >
             <PopoverArrow className="data-[side=bottom]:top-[-8px] data-[side=left]:right-[-13px] data-[side=left]:rotate-90 data-[side=right]:left-[-13px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-8px] data-[side=top]:rotate-180">
