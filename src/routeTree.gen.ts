@@ -13,6 +13,7 @@ import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiVocabularyRouteImport } from './routes/api/vocabulary'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiTextsRouteImport } from './routes/api/texts'
 import { Route as ApiDetectRouteImport } from './routes/api/detect'
@@ -36,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
 const ApiVocabularyRoute = ApiVocabularyRouteImport.update({
   id: '/api/vocabulary',
   path: '/api/vocabulary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTranslateRoute = ApiTranslateRouteImport.update({
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/api/detect': typeof ApiDetectRoute
   '/api/texts': typeof ApiTextsRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/api/tts': typeof ApiTtsRoute
   '/api/vocabulary': typeof ApiVocabularyRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/api/detect': typeof ApiDetectRoute
   '/api/texts': typeof ApiTextsRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/api/tts': typeof ApiTtsRoute
   '/api/vocabulary': typeof ApiVocabularyRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/api/detect': typeof ApiDetectRoute
   '/api/texts': typeof ApiTextsRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/api/tts': typeof ApiTtsRoute
   '/api/vocabulary': typeof ApiVocabularyRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/api/detect'
     | '/api/texts'
     | '/api/translate'
+    | '/api/tts'
     | '/api/vocabulary'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/api/detect'
     | '/api/texts'
     | '/api/translate'
+    | '/api/tts'
     | '/api/vocabulary'
     | '/api/auth/$'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/api/detect'
     | '/api/texts'
     | '/api/translate'
+    | '/api/tts'
     | '/api/vocabulary'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   ApiDetectRoute: typeof ApiDetectRoute
   ApiTextsRoute: typeof ApiTextsRoute
   ApiTranslateRoute: typeof ApiTranslateRoute
+  ApiTtsRoute: typeof ApiTtsRoute
   ApiVocabularyRoute: typeof ApiVocabularyRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/api/vocabulary'
       fullPath: '/api/vocabulary'
       preLoaderRoute: typeof ApiVocabularyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/translate': {
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDetectRoute: ApiDetectRoute,
   ApiTextsRoute: ApiTextsRoute,
   ApiTranslateRoute: ApiTranslateRoute,
+  ApiTtsRoute: ApiTtsRoute,
   ApiVocabularyRoute: ApiVocabularyRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

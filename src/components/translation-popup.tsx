@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Loader2, X, BookmarkPlus, Check, AlertCircle } from "lucide-react";
+import { Loader2, X, BookmarkPlus, Check, AlertCircle, Volume2, Snail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
     PopoverContent,
     PopoverTitle,
@@ -11,6 +12,7 @@ import {
 interface TranslationPopupProps {
     originalText: string;
     translatedText?: string;
+    sourceLanguage?: string;
     source?: "google" | "libretranslate";
     alternatives?: string[];
     isLoading: boolean;
@@ -21,6 +23,7 @@ interface TranslationPopupProps {
 export function TranslationPopup({
     originalText,
     translatedText,
+    sourceLanguage,
     source,
     alternatives,
     isLoading,
@@ -29,6 +32,8 @@ export function TranslationPopup({
 }: TranslationPopupProps) {
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [speakingRate, setSpeakingRate] = useState(1.0);
 
     const handleSave = async () => {
         if (!onSaveToVocabulary || !translatedText) return;
@@ -41,6 +46,34 @@ export function TranslationPopup({
             console.error("Failed to save to vocabulary:", err);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleSpeak = async (rate: number = 1.0) => {
+        if (!originalText || isSpeaking) return;
+
+        setIsSpeaking(true);
+        setSpeakingRate(rate);
+        try {
+            const response = await fetch("/api/tts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: originalText,
+                    languageCode: sourceLanguage === "auto" ? "en-US" : sourceLanguage,
+                    speakingRate: rate,
+                }),
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch pronunciation");
+
+            const { audioContent } = await response.json();
+            const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+            audio.onended = () => setIsSpeaking(false);
+            await audio.play();
+        } catch (err) {
+            console.error("Failed to speak:", err);
+            setIsSpeaking(false);
         }
     };
 
@@ -60,9 +93,29 @@ export function TranslationPopup({
 
             {/* Original text */}
             <div className="mb-3 pr-6 relative">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">
-                    Original
-                </p>
+                <div className="flex items-center justify-between mb-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+                        Original
+                    </p>
+                    <div className="flex items-center gap-0.5">
+                        <button
+                            onClick={() => handleSpeak(0.7)}
+                            disabled={isSpeaking}
+                            className="p-1 rounded-full hover:bg-primary/10 text-primary transition-colors disabled:opacity-50"
+                            title="Pronounce slowly (0.7x)"
+                        >
+                            <Snail className={cn("w-3.5 h-3.5", isSpeaking && speakingRate === 0.7 && "animate-pulse")} />
+                        </button>
+                        <button
+                            onClick={() => handleSpeak(1.0)}
+                            disabled={isSpeaking}
+                            className="p-1 rounded-full hover:bg-primary/10 text-primary transition-colors disabled:opacity-50"
+                            title="Pronounce"
+                        >
+                            <Volume2 className={cn("w-3.5 h-3.5", isSpeaking && speakingRate === 1.0 && "animate-pulse")} />
+                        </button>
+                    </div>
+                </div>
                 <p className="font-medium text-foreground break-words leading-tight">
                     {originalText}
                 </p>
