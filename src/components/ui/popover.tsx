@@ -81,7 +81,6 @@ function PopoverDescription({
   )
 }
 
-const PopoverArrow = PopoverPrimitive.Arrow
 const PopoverClose = PopoverPrimitive.Close
 const PopoverPortal = PopoverPrimitive.Portal
 
@@ -92,7 +91,6 @@ export {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
-  PopoverArrow,
   PopoverClose,
   PopoverPortal,
 }
