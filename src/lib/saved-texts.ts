@@ -38,7 +38,7 @@ export async function saveText(input: SaveTextInput): Promise<SavedText> {
             title: autoTitle,
             sourceLanguage: input.sourceLanguage,
             isPublic: input.isPublic ?? false,
-            status: input.status ?? "published",
+            status: input.status || (input.isPublic ? "published" : "draft"),
         })
         .returning();
 
