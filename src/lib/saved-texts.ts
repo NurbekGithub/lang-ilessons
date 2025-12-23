@@ -38,7 +38,7 @@ export async function saveText(input: SaveTextInput): Promise<SavedText> {
             title: autoTitle,
             sourceLanguage: input.sourceLanguage,
             isPublic: input.isPublic ?? false,
-            status: input.status ?? "draft",
+            status: input.status ?? "published",
         })
         .returning();
 
@@ -82,7 +82,7 @@ export async function getSavedTextById(id: string): Promise<SavedText | null> {
 
 // Update a saved text
 export async function updateSavedText(id: string, input: Partial<SaveTextInput>): Promise<SavedText | null> {
-    const updateData: any = { ...input };
+    const updateData: any = { ...input, status: input.isPublic ? "published" : "draft" };
     if (input.content && !input.title) {
         updateData.title = input.content.slice(0, 50) + (input.content.length > 50 ? "..." : "");
     }
