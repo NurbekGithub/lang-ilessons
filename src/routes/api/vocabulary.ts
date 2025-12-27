@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { addToVocabulary, getVocabularyList, deleteVocabularyItemById } from "@/lib/vocabulary";
+import { addToVocabulary, deleteVocabularyItemById, getVocabularyList } from "@/lib/vocabulary";
 
 export const Route = createFileRoute("/api/vocabulary")({
     server: {

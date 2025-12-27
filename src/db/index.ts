@@ -1,8 +1,8 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle as drizzleBun } from 'drizzle-orm/bun-sql';
 import { drizzle as drizzleNeon } from "drizzle-orm/neon-http";
-import * as schema from "./schema";
 import { SQL } from "bun";
+import * as schema from "./schema";
 
 const isDev = process.env.NODE_ENV === 'development';
 

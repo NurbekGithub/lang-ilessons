@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { tokenize } from "@/lib/tokenizer";
 import { useWordSelection } from "@/hooks/use-word-selection";
 import { useTranslation } from "@/hooks/use-translation";

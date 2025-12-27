@@ -1,6 +1,6 @@
+import path from "node:path";
 import { createFileRoute } from "@tanstack/react-router";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
-import path from "path";
 
 // Initialize the Google Cloud TTS client with the service account key
 const client = new TextToSpeechClient({

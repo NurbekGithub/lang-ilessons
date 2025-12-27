@@ -1,6 +1,6 @@
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { vocabulary } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
 
 export interface VocabularyItem {
     id: string;
@@ -42,14 +42,14 @@ export async function addToVocabulary(input: AddVocabularyInput): Promise<Vocabu
 }
 
 // Get user's vocabulary list
-export async function getVocabularyList(userId: string): Promise<VocabularyItem[]> {
+export async function getVocabularyList(userId: string): Promise<Array<VocabularyItem>> {
     const items = await db
         .select()
         .from(vocabulary)
         .where(eq(vocabulary.userId, userId))
         .orderBy(desc(vocabulary.createdAt));
 
-    return items as VocabularyItem[];
+    return items as Array<VocabularyItem>;
 }
 
 // Delete a vocabulary item

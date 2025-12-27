@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Loader2, X, BookmarkPlus, Check, AlertCircle, Volume2, Snail } from "lucide-react";
+import { AlertCircle, BookmarkPlus, Check, Loader2, Snail, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-    PopoverContent,
-    PopoverTitle,
-    PopoverDescription,
     PopoverClose,
+    PopoverContent,
+    PopoverDescription,
+    PopoverTitle,
 } from "@/components/ui/popover";
 
 interface TranslationPopupProps {
@@ -14,7 +14,7 @@ interface TranslationPopupProps {
     translatedText?: string;
     sourceLanguage?: string;
     source?: "google" | "libretranslate";
-    alternatives?: string[];
+    alternatives?: Array<string>;
     isLoading: boolean;
     error?: string | null;
     onSaveToVocabulary?: (originalText: string, translatedText: string) => Promise<void>;

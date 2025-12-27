@@ -8,8 +8,8 @@ export interface Token {
  * Tokenizes text into words, whitespace, and punctuation.
  * Handles multiple languages including CJK characters.
  */
-export function tokenize(text: string): Token[] {
-    const tokens: Token[] = [];
+export function tokenize(text: string): Array<Token> {
+    const tokens: Array<Token> = [];
 
     // Regex to match words (including non-Latin scripts), whitespace, or punctuation
     // Uses Unicode categories:
@@ -45,14 +45,14 @@ export function tokenize(text: string): Token[] {
 /**
  * Gets only the word tokens from a token array, with their original indices
  */
-export function getWordTokens(tokens: Token[]): Token[] {
+export function getWordTokens(tokens: Array<Token>): Array<Token> {
     return tokens.filter((t) => t.type === "word");
 }
 
 /**
  * Rebuilds the text from tokens, optionally extracting a range
  */
-export function tokensToText(tokens: Token[], startIndex?: number, endIndex?: number): string {
+export function tokensToText(tokens: Array<Token>, startIndex?: number, endIndex?: number): string {
     const start = startIndex ?? 0;
     const end = endIndex ?? tokens.length - 1;
 

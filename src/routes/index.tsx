@@ -1,12 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { createFileRoute, useNavigate  } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Edit2, FileText, Languages, Loader2, Trash2 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { TextInput } from "@/components/text-input";
 import { TextDisplay } from "@/components/text-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Trash2, Loader2, Edit2, Languages } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/")({
@@ -31,8 +30,8 @@ function HomePage() {
   const [currentTextId, setCurrentTextId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [targetLanguage] = useState("en");
-  const [savedTexts, setSavedTexts] = useState<SavedText[]>([]);
-  const [publicStories, setPublicStories] = useState<SavedText[]>([]);
+  const [savedTexts, setSavedTexts] = useState<Array<SavedText>>([]);
+  const [publicStories, setPublicStories] = useState<Array<SavedText>>([]);
   const [isLoadingTexts, setIsLoadingTexts] = useState(false);
   const [isLoadingPublic, setIsLoadingPublic] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);

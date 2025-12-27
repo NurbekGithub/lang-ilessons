@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { ArrowLeft, BookOpen, Loader2, Trash2 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trash2, BookOpen, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/vocabulary")({
     component: VocabularyPage,
@@ -21,7 +21,7 @@ interface VocabularyItem {
 
 function VocabularyPage() {
     const { data: session, isPending: isSessionPending } = useSession();
-    const [items, setItems] = useState<VocabularyItem[]>([]);
+    const [items, setItems] = useState<Array<VocabularyItem>>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 

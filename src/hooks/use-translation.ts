@@ -1,11 +1,11 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 interface TranslationResult {
     translatedText: string;
     sourceLanguage: string;
     targetLanguage: string;
     source: "google" | "libretranslate";
-    alternatives?: string[];
+    alternatives?: Array<string>;
 }
 
 interface UseTranslationOptions {

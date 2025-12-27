@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowRight, Languages, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Languages, ArrowRight, Loader2 } from "lucide-react";
 import { LanguageSelector, isRTL } from "@/components/language-selector";
 import { useSession } from "@/lib/auth-client";
 import { Checkbox } from "@/components/ui/checkbox";
