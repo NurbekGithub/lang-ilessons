@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TextDisplay } from "@/components/text-display";
 import { TextInput } from "@/components/text-input";
-import { getSavedTextById } from "@/lib/saved-texts";
-import { deleteTextFn, updateTextFn } from "@/server-fns/texts";
+import { deleteTextFn, getTextByIdFn, updateTextFn } from "@/server-fns/texts";
 
 export const Route = createFileRoute("/texts/$textId")({
   loader: async ({ params }) => {
-    const text = await getSavedTextById(params.textId);
+    const text = await getTextByIdFn({ data: { id: params.textId } });
     if (!text) {
       throw new Error("Text not found");
     }

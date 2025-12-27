@@ -1,87 +1,85 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { FileText, Languages } from "lucide-react";
-import type {SavedText} from "@/lib/saved-texts";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { TextInput } from "@/components/text-input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import {  getPublicStories, getSavedTexts } from "@/lib/saved-texts";
-import { createTextFn, deleteTextFn } from "@/server-fns/texts";
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useServerFn } from '@tanstack/react-start'
+import { FileText, Languages } from 'lucide-react'
+import type { SavedText } from '@/lib/saved-texts'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { TextInput } from '@/components/text-input'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { createTextFn, deleteTextFn, getPublicStoriesFn, getSavedTextsFn } from '@/server-fns/texts'
+import { getSessionFn } from '@/server-fns/session'
 
-export const Route = createFileRoute("/")({
-  loader: async ({ context }) => {
+export const Route = createFileRoute('/')({
+  loader: async () => {
     // Access session from router context
-    console.log("HEREEE")
-    const session = await context.getSession();
-    console.log({session})
+    const session = await getSessionFn()
 
     // Fetch public stories for everyone
-    const publicStories = await getPublicStories();
+    const publicStories = await getPublicStoriesFn()
 
     // Fetch saved texts if user is logged in
-    let savedTexts: Awaited<ReturnType<typeof getSavedTexts>> = [];
-    if (session.data?.user.id) {
-      savedTexts = await getSavedTexts(session.data.user.id);
+    let savedTexts: Awaited<ReturnType<typeof getSavedTextsFn>> = []
+    if (session?.user.id) {
+      savedTexts = await getSavedTextsFn({ data: { userId: session.user.id } })
     }
 
     return {
       publicStories,
       savedTexts,
-      session,
-    };
+      user: session?.user,
+    }
   },
   component: HomePage,
-});
-
+})
 
 function HomePage() {
-  const navigate = useNavigate();
-  const { publicStories, savedTexts, session } = Route.useLoaderData();
-  const createText = useServerFn(createTextFn);
-  const deleteText = useServerFn(deleteTextFn);
+  const navigate = useNavigate()
+  const { publicStories, savedTexts, user } = Route.useLoaderData()
+  const createText = useServerFn(createTextFn)
+  const deleteText = useServerFn(deleteTextFn)
 
-  const handleTextSubmit = async (text: string, language: string, isPublic?: boolean) => {
-    if (!session.data?.user.id) {
-      alert("Please sign in to save texts");
-      return;
+  const handleTextSubmit = async (
+    text: string,
+    language: string,
+    isPublic?: boolean,
+  ) => {
+    if (!user?.id) {
+      alert('Please sign in to save texts')
+      return
     }
 
     // Save new text
     const result = await createText({
       data: {
-        userId: session.data.user.id,
+        userId: user.id,
         content: text,
-        sourceLanguage: language === "auto" ? undefined : language,
+        sourceLanguage: language === 'auto' ? undefined : language,
         isPublic,
       },
-    });
+    })
 
-    if (result) {
-      // Navigate to the new text's details page
-      navigate({ to: "/texts/$textId", params: { textId: result.id } });
-    }
-  };
+    navigate({ to: '/texts/$textId', params: { textId: result.id } })
+  }
 
   const handleOpenSavedText = (text: SavedText) => {
     // Navigate to text details page
-    navigate({ to: "/texts/$textId", params: { textId: text.id } });
-  };
+    navigate({ to: '/texts/$textId', params: { textId: text.id } })
+  }
 
   const handleDeleteText = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this text?")) {
-      return;
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this text?')) {
+      return
     }
 
     try {
-      await deleteText({ data: { id } });
+      await deleteText({ data: { id } })
       // Reload to refetch data
-      window.location.reload();
+      window.location.reload()
     } catch (err) {
-      console.error("Failed to delete text:", err);
+      console.error('Failed to delete text:', err)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,7 +93,7 @@ function HomePage() {
             </p>
           </div>
 
-          {session.data?.user && (
+          {user && (
             <div className="flex items-center gap-3">
               <a
                 href="/vocabulary"
@@ -104,26 +102,26 @@ function HomePage() {
                 My Vocabulary
               </a>
               <ThemeToggle />
-              {session.data.user.image && (
+              {user.image && (
                 <img
-                  src={session.data.user.image}
-                  alt={session.data.user.name || "User"}
+                  src={user.image}
+                  alt={user.name || 'User'}
                   className="w-8 h-8 rounded-full"
                 />
               )}
               <span className="text-sm font-medium hidden sm:inline">
-                {session.data.user.name || session.data.user.email}
+                {user.name || user.email}
               </span>
             </div>
           )}
 
-          {!session.data?.user && (
+          {!user && (
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate({ to: "/login" })}
+                onClick={() => navigate({ to: '/login' })}
               >
                 Sign In
               </Button>
@@ -136,7 +134,7 @@ function HomePage() {
           <TextInput onSubmit={handleTextSubmit} />
 
           {/* Saved Texts */}
-          {session.data?.user && (
+          {user && (
             <div className="space-y-3">
               <h2 className="text-lg font-semibold">My Texts</h2>
               {savedTexts.length === 0 ? (
@@ -158,7 +156,9 @@ function HomePage() {
                     >
                       <CardContent className="p-4 flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{text.title || "Untitled"}</p>
+                          <p className="font-medium truncate">
+                            {text.title || 'Untitled'}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {text.createdAt.toLocaleDateString()}
                           </p>
@@ -215,12 +215,16 @@ function HomePage() {
                   >
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{story.title || "Untitled"}</p>
+                        <p className="font-medium truncate">
+                          {story.title || 'Untitled'}
+                        </p>
                         <div className="flex items-center gap-2">
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                            {story.sourceLanguage || "Auto"}
+                            {story.sourceLanguage || 'Auto'}
                           </p>
-                          <span className="text-[10px] text-muted-foreground/30">•</span>
+                          <span className="text-[10px] text-muted-foreground/30">
+                            •
+                          </span>
                           <p className="text-[10px] text-muted-foreground">
                             {story.createdAt.toLocaleDateString()}
                           </p>
@@ -234,7 +238,7 @@ function HomePage() {
           </div>
 
           {/* Instructions for non-logged in users */}
-          {!session.data?.user && (
+          {!user && (
             <Card className="bg-muted/50 border-dashed">
               <CardContent className="p-4">
                 <h3 className="font-medium mb-2">How it works</h3>
@@ -249,9 +253,7 @@ function HomePage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-mono text-primary">3.</span>
-                    <span>
-                      Tap another word to translate the whole phrase
-                    </span>
+                    <span>Tap another word to translate the whole phrase</span>
                   </li>
                 </ol>
               </CardContent>
@@ -260,5 +262,5 @@ function HomePage() {
         </main>
       </div>
     </div>
-  );
+  )
 }

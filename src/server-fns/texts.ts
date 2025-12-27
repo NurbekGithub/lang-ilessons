@@ -26,9 +26,7 @@ export const getTextByIdFn = createServerFn()
   .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
     const text = await getSavedTextById(data.id)
-    if (!text) {
-      throw new Error('Text not found')
-    }
+    
     return text
   })
 

@@ -26,11 +26,11 @@ export interface SaveTextInput {
 }
 
 // Save a new text
-export async function saveText(input: SaveTextInput): Promise<SavedText> {
+export async function saveText(input: SaveTextInput) {
     // Generate a title from first 50 chars if not provided
     const autoTitle = input.title || input.content.slice(0, 50) + (input.content.length > 50 ? "..." : "");
 
-    const result = await db
+    const [result] = await db
         .insert(savedText)
         .values({
             userId: input.userId,
@@ -42,22 +42,22 @@ export async function saveText(input: SaveTextInput): Promise<SavedText> {
         })
         .returning();
 
-    return result[0] as SavedText;
+    return result;
 }
 
 // Get user's saved texts
-export async function getSavedTexts(userId: string): Promise<Array<SavedText>> {
+export async function getSavedTexts(userId: string) {
     const items = await db
         .select()
         .from(savedText)
         .where(eq(savedText.userId, userId))
         .orderBy(desc(savedText.createdAt));
 
-    return items as Array<SavedText>;
+    return items;
 }
 
 // Get public published stories
-export async function getPublicStories(): Promise<Array<SavedText>> {
+export async function getPublicStories() {
     const items = await db
         .select()
         .from(savedText)
@@ -66,18 +66,18 @@ export async function getPublicStories(): Promise<Array<SavedText>> {
 
     // Filter by 'published' status in code for now or add 'and' condition
     // For now I'll use the where clause properly if I can import 'and'
-    return (items as Array<SavedText>).filter(item => item.status === "published");
+    return items.filter(item => item.status === "published");
 }
 
 // Get a single saved text by ID
-export async function getSavedTextById(id: string): Promise<SavedText | null> {
-    const items = await db
+export async function getSavedTextById(id: string) {
+    const [items] = await db
         .select()
         .from(savedText)
         .where(eq(savedText.id, id))
         .limit(1);
 
-    return (items[0] as SavedText) || null;
+    return items;
 }
 
 // Update a saved text
@@ -94,7 +94,7 @@ export async function updateSavedText(id: string, input: Partial<SaveTextInput>)
         .where(eq(savedText.id, id))
         .returning();
 
-    return (result[0] as SavedText) || null;
+    return result[0] || null;
 }
 
 // Delete a saved text
