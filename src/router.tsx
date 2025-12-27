@@ -2,11 +2,15 @@ import { createRouter } from '@tanstack/react-router'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
+import { getSession } from '@/lib/auth-client'
 
 // Create a new router instance
 export const getRouter = () => {
   const router = createRouter({
     routeTree,
+    context: {
+      getSession,
+    },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
   })

@@ -1,11 +1,13 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { translateTextFn } from "@/server-fns/translate";
 
 interface TranslationResult {
     translatedText: string;
     sourceLanguage: string;
     targetLanguage: string;
     source: "google" | "libretranslate";
-    alternatives?: string[];
+    alternatives?: Array<string>;
 }
 
 interface UseTranslationOptions {
@@ -17,6 +19,7 @@ export function useTranslation(options: UseTranslationOptions = {}) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<TranslationResult | null>(null);
+    const translateText = useServerFn(translateTextFn);
 
     const translate = useCallback(async (text: string, sourceLang?: string) => {
         if (!text.trim()) {
@@ -29,22 +32,13 @@ export function useTranslation(options: UseTranslationOptions = {}) {
         setResult(null);
 
         try {
-            const response = await fetch("/api/translate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+            const data = await translateText({
+                data: {
                     text,
                     sourceLanguage: sourceLang || "auto",
                     targetLanguage,
-                }),
+                },
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || "Translation failed");
-            }
-
-            const data: TranslationResult = await response.json();
             setResult(data);
             return data;
         } catch (err) {
@@ -54,7 +48,7 @@ export function useTranslation(options: UseTranslationOptions = {}) {
         } finally {
             setIsLoading(false);
         }
-    }, [targetLanguage]);
+    }, [targetLanguage, translateText]);
 
     const clearResult = useCallback(() => {
         setResult(null);

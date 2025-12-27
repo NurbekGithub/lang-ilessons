@@ -11,7 +11,7 @@ export interface TranslateOptions {
 export interface TranslateResult {
     translatedText: string;
     detectedLanguage?: string;
-    alternatives?: string[];
+    alternatives?: Array<string>;
     source: "google" | "libretranslate";
 }
 

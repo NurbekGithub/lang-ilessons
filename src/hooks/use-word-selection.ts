@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { Token } from "@/lib/tokenizer";
 
 export interface WordSelection {
@@ -37,7 +37,7 @@ export function useWordSelection() {
         setIsRangeSelection(false);
     }, []);
 
-    const getSelectedText = useCallback((tokens: Token[]): string => {
+    const getSelectedText = useCallback((tokens: Array<Token>): string => {
         if (!selection) return "";
 
         // Get all tokens between start and end word indices (inclusive)

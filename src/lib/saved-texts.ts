@@ -1,6 +1,6 @@
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { savedText } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
 
 export type StoryStatus = "draft" | "denied" | "published";
 
@@ -46,18 +46,18 @@ export async function saveText(input: SaveTextInput): Promise<SavedText> {
 }
 
 // Get user's saved texts
-export async function getSavedTexts(userId: string): Promise<SavedText[]> {
+export async function getSavedTexts(userId: string): Promise<Array<SavedText>> {
     const items = await db
         .select()
         .from(savedText)
         .where(eq(savedText.userId, userId))
         .orderBy(desc(savedText.createdAt));
 
-    return items as SavedText[];
+    return items as Array<SavedText>;
 }
 
 // Get public published stories
-export async function getPublicStories(): Promise<SavedText[]> {
+export async function getPublicStories(): Promise<Array<SavedText>> {
     const items = await db
         .select()
         .from(savedText)
@@ -66,7 +66,7 @@ export async function getPublicStories(): Promise<SavedText[]> {
 
     // Filter by 'published' status in code for now or add 'and' condition
     // For now I'll use the where clause properly if I can import 'and'
-    return (items as SavedText[]).filter(item => item.status === "published");
+    return (items as Array<SavedText>).filter(item => item.status === "published");
 }
 
 // Get a single saved text by ID

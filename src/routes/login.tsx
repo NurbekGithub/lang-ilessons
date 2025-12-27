@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AuthForm } from "@/components/auth-form";
-import { useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate  } from "@tanstack/react-router";
 import { BookOpen } from "lucide-react";
+import { AuthForm } from "@/components/auth-form";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/login")({
