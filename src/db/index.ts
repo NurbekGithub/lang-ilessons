@@ -8,6 +8,6 @@ const isDev = process.env.NODE_ENV === 'development';
 
 export const db = isDev
     ? drizzleNeon({ client: neon(process.env.DATABASE_URL!), schema })
-    : drizzleBun({ client: new SQL(process.env.DATABASE_URL!), schema })
+    : drizzleBun({ client: new SQL({ adapter: "postgres", url: process.env.DATABASE_URL! }), schema })
 
 export type Database = typeof db;

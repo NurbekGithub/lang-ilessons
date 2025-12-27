@@ -1,11 +1,15 @@
-import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import appCss from '../styles.css?url'
+import type { getSession } from '@/lib/auth-client'
 import { ThemeProvider } from '@/lib/theme'
 
+export interface RouterContext {
+  getSession: typeof getSession
+}
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       {
@@ -31,6 +35,7 @@ export const Route = createRootRoute({
     ],
   }),
 
+  notFoundComponent: () => <div>Not found</div>,
   shellComponent: RootDocument,
   component: RootComponent,
 })
