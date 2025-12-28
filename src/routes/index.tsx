@@ -1,11 +1,14 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
+import { useState } from 'react'
 import { FileText, Languages } from 'lucide-react'
 import type { SavedText } from '@/lib/saved-texts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { TextInput } from '@/components/text-input'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { OcrInput } from '@/components/ocr-input'
 import { createTextFn, deleteTextFn, getPublicStoriesFn, getSavedTextsFn } from '@/server-fns/texts'
 import { getSessionFn } from '@/server-fns/session'
 
@@ -37,6 +40,11 @@ function HomePage() {
   const { publicStories, savedTexts, user } = Route.useLoaderData()
   const createText = useServerFn(createTextFn)
   const deleteText = useServerFn(deleteTextFn)
+  
+  // OCR state
+  const [ocrText, setOcrText] = useState('')
+  const [ocrLanguage, setOcrLanguage] = useState('auto')
+  const [activeTab, setActiveTab] = useState('text')
 
   const handleTextSubmit = async (
     text: string,
@@ -59,6 +67,16 @@ function HomePage() {
     })
 
     navigate({ to: '/texts/$textId', params: { textId: result.id } })
+    
+    // Reset OCR state after successful submit
+    setOcrText('')
+    setOcrLanguage('auto')
+  }
+
+  const handleOcrExtract = (text: string, language: string) => {
+    setOcrText(text)
+    setOcrLanguage(language)
+    setActiveTab('text')
   }
 
   const handleOpenSavedText = (text: SavedText) => {
@@ -131,7 +149,24 @@ function HomePage() {
 
         {/* Main Content */}
         <main className="space-y-8">
-          <TextInput onSubmit={handleTextSubmit} />
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="text">Paste Text</TabsTrigger>
+              <TabsTrigger value="ocr">Scan Image</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="text">
+              <TextInput
+                onSubmit={handleTextSubmit}
+                initialText={ocrText}
+                initialLanguage={ocrLanguage}
+              />
+            </TabsContent>
+            
+            <TabsContent value="ocr">
+              <OcrInput onExtract={handleOcrExtract} />
+            </TabsContent>
+          </Tabs>
 
           {/* Saved Texts */}
           {user && (
