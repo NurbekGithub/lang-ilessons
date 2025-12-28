@@ -71,13 +71,13 @@ export async function getPublicStories() {
 
 // Get a single saved text by ID
 export async function getSavedTextById(id: string) {
-    const [items] = await db
+    const [text] = await db
         .select()
         .from(savedText)
         .where(eq(savedText.id, id))
         .limit(1);
 
-    return items;
+    return text;
 }
 
 // Update a saved text

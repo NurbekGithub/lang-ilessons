@@ -11,9 +11,7 @@ import { deleteTextFn, getTextByIdFn, updateTextFn } from "@/server-fns/texts";
 export const Route = createFileRoute("/texts/$textId")({
   loader: async ({ params }) => {
     const text = await getTextByIdFn({ data: { id: params.textId } });
-    if (!text) {
-      throw new Error("Text not found");
-    }
+    
     return { text };
   },
   component: TextDetailsPage,
