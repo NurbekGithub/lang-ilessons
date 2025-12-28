@@ -12,11 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiVocabularyRouteImport } from './routes/api/vocabulary'
-import { Route as ApiTtsRouteImport } from './routes/api/tts'
-import { Route as ApiTranslateRouteImport } from './routes/api/translate'
-import { Route as ApiTextsRouteImport } from './routes/api/texts'
-import { Route as ApiDetectRouteImport } from './routes/api/detect'
+import { Route as TextsTextIdRouteImport } from './routes/texts.$textId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const VocabularyRoute = VocabularyRouteImport.update({
@@ -34,29 +30,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiVocabularyRoute = ApiVocabularyRouteImport.update({
-  id: '/api/vocabulary',
-  path: '/api/vocabulary',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiTtsRoute = ApiTtsRouteImport.update({
-  id: '/api/tts',
-  path: '/api/tts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiTranslateRoute = ApiTranslateRouteImport.update({
-  id: '/api/translate',
-  path: '/api/translate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiTextsRoute = ApiTextsRouteImport.update({
-  id: '/api/texts',
-  path: '/api/texts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDetectRoute = ApiDetectRouteImport.update({
-  id: '/api/detect',
-  path: '/api/detect',
+const TextsTextIdRoute = TextsTextIdRouteImport.update({
+  id: '/texts/$textId',
+  path: '/texts/$textId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -69,22 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vocabulary': typeof VocabularyRoute
-  '/api/detect': typeof ApiDetectRoute
-  '/api/texts': typeof ApiTextsRoute
-  '/api/translate': typeof ApiTranslateRoute
-  '/api/tts': typeof ApiTtsRoute
-  '/api/vocabulary': typeof ApiVocabularyRoute
+  '/texts/$textId': typeof TextsTextIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vocabulary': typeof VocabularyRoute
-  '/api/detect': typeof ApiDetectRoute
-  '/api/texts': typeof ApiTextsRoute
-  '/api/translate': typeof ApiTranslateRoute
-  '/api/tts': typeof ApiTtsRoute
-  '/api/vocabulary': typeof ApiVocabularyRoute
+  '/texts/$textId': typeof TextsTextIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -92,46 +60,20 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/vocabulary': typeof VocabularyRoute
-  '/api/detect': typeof ApiDetectRoute
-  '/api/texts': typeof ApiTextsRoute
-  '/api/translate': typeof ApiTranslateRoute
-  '/api/tts': typeof ApiTtsRoute
-  '/api/vocabulary': typeof ApiVocabularyRoute
+  '/texts/$textId': typeof TextsTextIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/login'
-    | '/vocabulary'
-    | '/api/detect'
-    | '/api/texts'
-    | '/api/translate'
-    | '/api/tts'
-    | '/api/vocabulary'
-    | '/api/auth/$'
+  fullPaths: '/' | '/login' | '/vocabulary' | '/texts/$textId' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/login'
-    | '/vocabulary'
-    | '/api/detect'
-    | '/api/texts'
-    | '/api/translate'
-    | '/api/tts'
-    | '/api/vocabulary'
-    | '/api/auth/$'
+  to: '/' | '/login' | '/vocabulary' | '/texts/$textId' | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/login'
     | '/vocabulary'
-    | '/api/detect'
-    | '/api/texts'
-    | '/api/translate'
-    | '/api/tts'
-    | '/api/vocabulary'
+    | '/texts/$textId'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -139,11 +81,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   VocabularyRoute: typeof VocabularyRoute
-  ApiDetectRoute: typeof ApiDetectRoute
-  ApiTextsRoute: typeof ApiTextsRoute
-  ApiTranslateRoute: typeof ApiTranslateRoute
-  ApiTtsRoute: typeof ApiTtsRoute
-  ApiVocabularyRoute: typeof ApiVocabularyRoute
+  TextsTextIdRoute: typeof TextsTextIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -170,39 +108,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/vocabulary': {
-      id: '/api/vocabulary'
-      path: '/api/vocabulary'
-      fullPath: '/api/vocabulary'
-      preLoaderRoute: typeof ApiVocabularyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/tts': {
-      id: '/api/tts'
-      path: '/api/tts'
-      fullPath: '/api/tts'
-      preLoaderRoute: typeof ApiTtsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/translate': {
-      id: '/api/translate'
-      path: '/api/translate'
-      fullPath: '/api/translate'
-      preLoaderRoute: typeof ApiTranslateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/texts': {
-      id: '/api/texts'
-      path: '/api/texts'
-      fullPath: '/api/texts'
-      preLoaderRoute: typeof ApiTextsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/detect': {
-      id: '/api/detect'
-      path: '/api/detect'
-      fullPath: '/api/detect'
-      preLoaderRoute: typeof ApiDetectRouteImport
+    '/texts/$textId': {
+      id: '/texts/$textId'
+      path: '/texts/$textId'
+      fullPath: '/texts/$textId'
+      preLoaderRoute: typeof TextsTextIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -219,11 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   VocabularyRoute: VocabularyRoute,
-  ApiDetectRoute: ApiDetectRoute,
-  ApiTextsRoute: ApiTextsRoute,
-  ApiTranslateRoute: ApiTranslateRoute,
-  ApiTtsRoute: ApiTtsRoute,
-  ApiVocabularyRoute: ApiVocabularyRoute,
+  TextsTextIdRoute: TextsTextIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

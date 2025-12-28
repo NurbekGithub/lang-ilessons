@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { tokenize } from "@/lib/tokenizer";
 import { useWordSelection } from "@/hooks/use-word-selection";
 import { useTranslation } from "@/hooks/use-translation";
@@ -7,6 +8,7 @@ import { WordSpan } from "@/components/word-span";
 import { TranslationPopup } from "@/components/translation-popup";
 import { isRTL } from "@/components/language-selector";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { addVocabularyItemFn } from "@/server-fns/vocabulary";
 
 interface TextDisplayProps {
     text: string;
@@ -37,6 +39,7 @@ export function TextDisplay({
 
     const [showPopup, setShowPopup] = useState(false);
     const [activeTriggerId, setActiveTriggerId] = useState<string | null>(null);
+    const addVocabularyItem = useServerFn(addVocabularyItemFn);
 
     // Get the currently selected text
     const selectedText = useMemo(() => {
@@ -73,28 +76,22 @@ export function TextDisplay({
     // Save to vocabulary via API
     const handleSaveToVocabulary = useCallback(
         async (originalText: string, translatedText: string) => {
-            if (!session?.user?.id) {
+            if (!session?.user.id) {
                 throw new Error("Please sign in to save words");
             }
 
-            const response = await fetch("/api/vocabulary", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+            await addVocabularyItem({
+                data: {
                     userId: session.user.id,
                     originalText,
                     translatedText,
                     sourceLanguage: sourceLanguage === "auto" ? undefined : sourceLanguage,
                     targetLanguage,
                     context: text.length <= 200 ? text : undefined,
-                }),
+                },
             });
-
-            if (!response.ok) {
-                throw new Error("Failed to save to vocabulary");
-            }
         },
-        [session?.user?.id, targetLanguage, text, sourceLanguage]
+        [session?.user.id, targetLanguage, text, sourceLanguage, addVocabularyItem]
     );
 
     // Simple open change handler

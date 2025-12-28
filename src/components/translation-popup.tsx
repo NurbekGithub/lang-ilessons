@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { AlertCircle, BookmarkPlus, Check, Loader2, Snail, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ import {
     PopoverDescription,
     PopoverTitle,
 } from "@/components/ui/popover";
+import { textToSpeechFn } from "@/server-fns/tts";
 
 interface TranslationPopupProps {
     originalText: string;
@@ -34,6 +36,7 @@ export function TranslationPopup({
     const [isSaved, setIsSaved] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [speakingRate, setSpeakingRate] = useState(1.0);
+    const textToSpeech = useServerFn(textToSpeechFn);
 
     const handleSave = async () => {
         if (!onSaveToVocabulary || !translatedText) return;
@@ -55,20 +58,14 @@ export function TranslationPopup({
         setIsSpeaking(true);
         setSpeakingRate(rate);
         try {
-            const response = await fetch("/api/tts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+            const result = await textToSpeech({
+                data: {
                     text: originalText,
                     languageCode: sourceLanguage === "auto" ? "en-US" : sourceLanguage,
                     speakingRate: rate,
-                }),
+                },
             });
-
-            if (!response.ok) throw new Error("Failed to fetch pronunciation");
-
-            const { audioContent } = await response.json();
-            const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+            const audio = new Audio(`data:audio/mp3;base64,${result.audioContent}`);
             audio.onended = () => setIsSpeaking(false);
             await audio.play();
         } catch (err) {

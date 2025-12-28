@@ -1,9 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, Loader2, Trash2 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { deleteVocabularyItemFn, getVocabularyFn } from "@/server-fns/vocabulary";
 
 export const Route = createFileRoute("/vocabulary")({
     component: VocabularyPage,
@@ -16,7 +18,7 @@ interface VocabularyItem {
     sourceLanguage: string | null;
     targetLanguage: string;
     context: string | null;
-    createdAt: string;
+    createdAt: Date;
 }
 
 function VocabularyPage() {
@@ -24,25 +26,24 @@ function VocabularyPage() {
     const [items, setItems] = useState<Array<VocabularyItem>>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const getVocabulary = useServerFn(getVocabularyFn);
+    const deleteVocabularyItem = useServerFn(deleteVocabularyItemFn);
 
     useEffect(() => {
-        if (session?.user?.id) {
+        if (session?.user.id) {
             loadVocabulary();
         } else if (!isSessionPending) {
             setIsLoading(false);
         }
-    }, [session?.user?.id, isSessionPending]);
+    }, [session?.user.id, isSessionPending]);
 
     const loadVocabulary = async () => {
-        if (!session?.user?.id) return;
+        if (!session?.user.id) return;
 
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/vocabulary?userId=${session.user.id}`);
-            if (response.ok) {
-                const data = await response.json();
-                setItems(data.items);
-            }
+            const data = await getVocabulary({ data: { userId: session.user.id } });
+            setItems(data);
         } catch (err) {
             console.error("Failed to load vocabulary:", err);
         } finally {
@@ -53,10 +54,8 @@ function VocabularyPage() {
     const handleDelete = async (id: string) => {
         setDeletingId(id);
         try {
-            const response = await fetch(`/api/vocabulary?id=${id}`, { method: "DELETE" });
-            if (response.ok) {
-                setItems((prev) => prev.filter((item) => item.id !== id));
-            }
+            await deleteVocabularyItem({ data: { id } });
+            setItems((prev) => prev.filter((item) => item.id !== id));
         } catch (err) {
             console.error("Failed to delete vocabulary item:", err);
         } finally {

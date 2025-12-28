@@ -1,186 +1,99 @@
-import { createFileRoute, useNavigate  } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowLeft, Edit2, FileText, Languages, Loader2, Trash2 } from "lucide-react";
-import { useSession } from "@/lib/auth-client";
-import { TextInput } from "@/components/text-input";
-import { TextDisplay } from "@/components/text-display";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useServerFn } from '@tanstack/react-start'
+import { FileText, Languages } from 'lucide-react'
+import type { SavedText } from '@/lib/saved-texts'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { TextInput } from '@/components/text-input'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { createTextFn, deleteTextFn, getPublicStoriesFn, getSavedTextsFn } from '@/server-fns/texts'
+import { getSessionFn } from '@/server-fns/session'
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
+  loader: async () => {
+    // Access session from router context
+    const session = await getSessionFn()
+
+    // Fetch public stories for everyone
+    const publicStories = await getPublicStoriesFn()
+
+    // Fetch saved texts if user is logged in
+    let savedTexts: Awaited<ReturnType<typeof getSavedTextsFn>> = []
+    if (session?.user.id) {
+      savedTexts = await getSavedTextsFn({ data: { userId: session.user.id } })
+    }
+
+    return {
+      publicStories,
+      savedTexts,
+      user: session?.user,
+    }
+  },
   component: HomePage,
-});
-
-interface SavedText {
-  id: string;
-  title: string;
-  content: string;
-  sourceLanguage: string | null;
-  isPublic?: boolean;
-  status?: "draft" | "denied" | "published";
-  createdAt: string;
-}
+})
 
 function HomePage() {
-  const { data: session, isPending } = useSession();
-  const navigate = useNavigate();
-  const [inputText, setInputText] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("auto");
-  const [currentTextId, setCurrentTextId] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [targetLanguage] = useState("en");
-  const [savedTexts, setSavedTexts] = useState<Array<SavedText>>([]);
-  const [publicStories, setPublicStories] = useState<Array<SavedText>>([]);
-  const [isLoadingTexts, setIsLoadingTexts] = useState(false);
-  const [isLoadingPublic, setIsLoadingPublic] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const navigate = useNavigate()
+  const { publicStories, savedTexts, user } = Route.useLoaderData()
+  const createText = useServerFn(createTextFn)
+  const deleteText = useServerFn(deleteTextFn)
 
-  // Load public stories for everyone
-  useEffect(() => {
-    loadPublicStories();
-  }, []);
-
-  // Load saved texts when user is logged in
-  useEffect(() => {
-    if (session?.user?.id) {
-      loadSavedTexts();
+  const handleTextSubmit = async (
+    text: string,
+    language: string,
+    isPublic?: boolean,
+  ) => {
+    if (!user?.id) {
+      alert('Please sign in to save texts')
+      return
     }
-  }, [session?.user?.id]);
 
-  const loadSavedTexts = async () => {
-    if (!session?.user?.id) return;
-    setIsLoadingTexts(true);
-    try {
-      const response = await fetch(`/api/texts?userId=${session.user.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSavedTexts(data.texts);
-      }
-    } catch (err) {
-      console.error("Failed to load saved texts:", err);
-    } finally {
-      setIsLoadingTexts(false);
-    }
-  };
+    // Save new text
+    const result = await createText({
+      data: {
+        userId: user.id,
+        content: text,
+        sourceLanguage: language === 'auto' ? undefined : language,
+        isPublic,
+      },
+    })
 
-  const loadPublicStories = async () => {
-    setIsLoadingPublic(true);
-    try {
-      const response = await fetch("/api/texts?public=true");
-      if (response.ok) {
-        const data = await response.json();
-        setPublicStories(data.texts);
-      }
-    } catch (err) {
-      console.error("Failed to load public stories:", err);
-    } finally {
-      setIsLoadingPublic(false);
-    }
-  };
-
-  const handleTextSubmit = async (text: string, language: string, isPublic?: boolean) => {
-    setSelectedLanguage(language);
-
-    if (isEditing && currentTextId) {
-      // Update existing text
-      try {
-        const response = await fetch(`/api/texts?id=${currentTextId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: text,
-            sourceLanguage: language === "auto" ? undefined : language,
-            isPublic,
-          }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setSavedTexts((prev) => prev.map((t) => (t.id === currentTextId ? data.text : t)));
-          setIsEditing(false);
-        }
-      } catch (err) {
-        console.error("Failed to update text:", err);
-      }
-    } else if (session?.user?.id) {
-      // Save new text
-      try {
-        const response = await fetch("/api/texts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: session.user.id,
-            content: text,
-            sourceLanguage: language === "auto" ? undefined : language,
-            isPublic,
-          }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setSavedTexts((prev) => [data.text, ...prev]);
-          setCurrentTextId(data.text.id);
-        }
-      } catch (err) {
-        console.error("Failed to save text:", err);
-      }
-    }
-    setInputText(text);
-  };
+    navigate({ to: '/texts/$textId', params: { textId: result.id } })
+  }
 
   const handleOpenSavedText = (text: SavedText) => {
-    setSelectedLanguage(text.sourceLanguage || "auto");
-    setInputText(text.content);
-    setCurrentTextId(text.id);
-    setIsEditing(false);
-  };
+    // Navigate to text details page
+    navigate({ to: '/texts/$textId', params: { textId: text.id } })
+  }
 
   const handleDeleteText = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDeletingId(id);
-    try {
-      const response = await fetch(`/api/texts?id=${id}`, { method: "DELETE" });
-      if (response.ok) {
-        setSavedTexts((prev) => prev.filter((t) => t.id !== id));
-      }
-    } catch (err) {
-      console.error("Failed to delete text:", err);
-    } finally {
-      setDeletingId(null);
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this text?')) {
+      return
     }
-  };
 
-  const handleBack = () => {
-    setInputText(null);
-    setSelectedLanguage("auto");
-    setCurrentTextId(null);
-    setIsEditing(false);
-  };
+    try {
+      await deleteText({ data: { id } })
+      // Reload to refetch data
+      window.location.reload()
+    } catch (err) {
+      console.error('Failed to delete text:', err)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6 md:py-12">
         {/* Header */}
         <header className="flex items-center justify-between mb-6">
-          {inputText ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-          ) : (
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">LangLessons</h1>
-              <p className="text-sm text-muted-foreground">
-                Tap words to translate
-              </p>
-            </div>
-          )}
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">LangLessons</h1>
+            <p className="text-sm text-muted-foreground">
+              Tap words to translate
+            </p>
+          </div>
 
-          {session?.user && (
+          {user && (
             <div className="flex items-center gap-3">
               <a
                 href="/vocabulary"
@@ -189,26 +102,26 @@ function HomePage() {
                 My Vocabulary
               </a>
               <ThemeToggle />
-              {session.user.image && (
+              {user.image && (
                 <img
-                  src={session.user.image}
-                  alt={session.user.name || "User"}
+                  src={user.image}
+                  alt={user.name || 'User'}
                   className="w-8 h-8 rounded-full"
                 />
               )}
               <span className="text-sm font-medium hidden sm:inline">
-                {session.user.name || session.user.email}
+                {user.name || user.email}
               </span>
             </div>
           )}
 
-          {!session && !isPending && (
+          {!user && (
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate({ to: "/login" })}
+                onClick={() => navigate({ to: '/login' })}
               >
                 Sign In
               </Button>
@@ -217,180 +130,137 @@ function HomePage() {
         </header>
 
         {/* Main Content */}
-        <main>
-          {!inputText ? (
-            <div className="space-y-8">
-              <TextInput onSubmit={handleTextSubmit} isLoading={isLoadingTexts} />
+        <main className="space-y-8">
+          <TextInput onSubmit={handleTextSubmit} />
 
-              {/* Saved Texts */}
-              {session?.user && (
-                <div className="space-y-3">
-                  <h2 className="text-lg font-semibold">My Texts</h2>
-                  {isLoadingTexts ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : savedTexts.length === 0 ? (
-                    <Card className="bg-muted/50 border-dashed">
-                      <CardContent className="py-8 text-center">
-                        <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                        <p className="text-muted-foreground">
-                          Your saved texts will appear here
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-2">
-                      {savedTexts.map((text) => (
-                        <Card
-                          key={text.id}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => handleOpenSavedText(text)}
-                        >
-                          <CardContent className="p-4 flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">{text.title}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(text.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="shrink-0 text-muted-foreground hover:text-destructive"
-                              onClick={(e) => handleDeleteText(text.id, e)}
-                              disabled={deletingId === text.id}
-                            >
-                              {deletingId === text.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Public Stories */}
-              <div className="space-y-3 pt-6 border-t border-border/50">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Public Stories</h2>
-                  {isLoadingPublic && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-                </div>
-
-                {isLoadingPublic && publicStories.length === 0 ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : publicStories.length === 0 ? (
-                  <Card className="bg-muted/30 border-dashed">
-                    <CardContent className="py-8 text-center">
-                      <Languages className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
-                      <p className="text-sm text-muted-foreground">
-                        No public stories available yet
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-2">
-                    {publicStories.map((story) => (
-                      <Card
-                        key={story.id}
-                        className="cursor-pointer hover:bg-muted/50 transition-all hover:shadow-sm"
-                        onClick={() => handleOpenSavedText(story)}
-                      >
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{story.title}</p>
-                            <div className="flex items-center gap-2">
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                                {story.sourceLanguage || "Auto"}
-                              </p>
-                              <span className="text-[10px] text-muted-foreground/30">•</span>
-                              <p className="text-[10px] text-muted-foreground">
-                                {new Date(story.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Instructions for non-logged in users */}
-              {!session && (
+          {/* Saved Texts */}
+          {user && (
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold">My Texts</h2>
+              {savedTexts.length === 0 ? (
                 <Card className="bg-muted/50 border-dashed">
-                  <CardContent className="p-4">
-                    <h3 className="font-medium mb-2">How it works</h3>
-                    <ol className="text-sm text-muted-foreground space-y-2">
-                      <li className="flex items-start gap-2">
-                        <span className="font-mono text-primary">1.</span>
-                        <span>Paste any text in any language above</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-mono text-primary">2.</span>
-                        <span>Tap on any word to see its translation</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-mono text-primary">3.</span>
-                        <span>
-                          Tap another word to translate the whole phrase
-                        </span>
-                      </li>
-                    </ol>
+                  <CardContent className="py-8 text-center">
+                    <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">
+                      Your saved texts will appear here
+                    </p>
                   </CardContent>
                 </Card>
+              ) : (
+                <div className="space-y-2">
+                  {savedTexts.map((text) => (
+                    <Card
+                      key={text.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleOpenSavedText(text)}
+                    >
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">
+                            {text.title || 'Untitled'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {text.createdAt.toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 text-muted-foreground hover:text-destructive"
+                          onClick={(e) => handleDeleteText(text.id, e)}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-0.9 2-2 2H7c-1.1 0-2-0.9-2-2V6m3 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" />
+                          </svg>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               )}
             </div>
-          ) : isEditing ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Edit Text</h2>
-                <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
-                  Cancel
-                </Button>
+          )}
+
+          {/* Public Stories */}
+          <div className="space-y-3 pt-6 border-t border-border/50">
+            <h2 className="text-lg font-semibold">Public Stories</h2>
+
+            {publicStories.length === 0 ? (
+              <Card className="bg-muted/30 border-dashed">
+                <CardContent className="py-8 text-center">
+                  <Languages className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    No public stories available yet
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {publicStories.map((story) => (
+                  <Card
+                    key={story.id}
+                    className="cursor-pointer hover:bg-muted/50 transition-all hover:shadow-sm"
+                    onClick={() => handleOpenSavedText(story)}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">
+                          {story.title || 'Untitled'}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                            {story.sourceLanguage || 'Auto'}
+                          </p>
+                          <span className="text-[10px] text-muted-foreground/30">
+                            •
+                          </span>
+                          <p className="text-[10px] text-muted-foreground">
+                            {story.createdAt.toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <TextInput
-                onSubmit={handleTextSubmit}
-                isLoading={isLoadingTexts}
-                initialText={inputText || ""}
-                initialLanguage={selectedLanguage}
-                submitLabel="Update Text"
-              />
-            </div>
-          ) : (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-lg">
-                  Tap on words to translate
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                  className="gap-2 h-8"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  Edit
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <TextDisplay
-                  text={inputText || ""}
-                  sourceLanguage={selectedLanguage}
-                  targetLanguage={targetLanguage}
-                />
+            )}
+          </div>
+
+          {/* Instructions for non-logged in users */}
+          {!user && (
+            <Card className="bg-muted/50 border-dashed">
+              <CardContent className="p-4">
+                <h3 className="font-medium mb-2">How it works</h3>
+                <ol className="text-sm text-muted-foreground space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="font-mono text-primary">1.</span>
+                    <span>Paste any text in any language above</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-mono text-primary">2.</span>
+                    <span>Tap on any word to see its translation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-mono text-primary">3.</span>
+                    <span>Tap another word to translate the whole phrase</span>
+                  </li>
+                </ol>
               </CardContent>
             </Card>
           )}
         </main>
       </div>
     </div>
-  );
+  )
 }
