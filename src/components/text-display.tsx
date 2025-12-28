@@ -119,6 +119,7 @@ export function TextDisplay({
                                 <PopoverTrigger
                                     key={token.index}
                                     id={`word-${token.index}`}
+                                    nativeButton={false}
                                     render={(props) => (
                                         <WordSpan
                                             {...props}
