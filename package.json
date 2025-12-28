@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --bun run vite dev --port 3000",
-    "build": "vite build",
+    "build": "bun --bun run vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint",
