@@ -70,23 +70,39 @@ export function CropperContent({
 
     if (!ctx) return null
 
-    // Set canvas dimensions to crop size
-    canvas.width = completedCrop.width
-    canvas.height = completedCrop.height
+    // Get natural and displayed dimensions
+    const naturalWidth = image.naturalWidth
+    const naturalHeight = image.naturalHeight
+    const displayedWidth = image.width
+    const displayedHeight = image.height
 
-    console.log({completedCrop})
+    // Calculate scale factor from displayed to natural dimensions
+    const scaleX = naturalWidth / displayedWidth
+    const scaleY = naturalHeight / displayedHeight
 
-    // Draw cropped area onto canvas
+    // Scale crop coordinates to natural dimensions
+    const scaledCrop = {
+      x: completedCrop.x * scaleX,
+      y: completedCrop.y * scaleY,
+      width: completedCrop.width * scaleX,
+      height: completedCrop.height * scaleY
+    }
+
+    // Set canvas dimensions to scaled crop size
+    canvas.width = scaledCrop.width
+    canvas.height = scaledCrop.height
+
+    // Draw cropped area onto canvas using natural dimensions
     ctx.drawImage(
       image,
-      completedCrop.x,
-      completedCrop.y,
-      completedCrop.width,
-      completedCrop.height,
+      scaledCrop.x,
+      scaledCrop.y,
+      scaledCrop.width,
+      scaledCrop.height,
       0,
       0,
-      completedCrop.width,
-      completedCrop.height
+      scaledCrop.width,
+      scaledCrop.height
     )
 
     // Convert canvas to blob and create File
