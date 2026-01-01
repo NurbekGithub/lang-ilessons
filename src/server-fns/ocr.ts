@@ -1,27 +1,8 @@
-import path from 'node:path'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { ImageAnnotatorClient } from '@google-cloud/vision'
-import { GoogleGenAI } from '@google/genai'
+import { getGenAIClient, getVisionClient } from './google-clients'
+import { BEST_MODEL, getLanguageName } from './constants'
 import { arabicInstructions, formatInstructions } from './instructions'
-
-const BEST_MODEL = "gemini-2.5-flash";
-// const CHEAP_MODEL = "gemini-2.5-flash-lite";
-
-// Initialize Vision API client with service account key
-const visionClient = new ImageAnnotatorClient({
-  keyFilename: path.join(process.cwd(), 'secrets/lang-481909-7416a55f8e8d.json'),
-})
-
-// Initialize Gemini AI client with Vertex AI using service account
-const genAI = new GoogleGenAI({
-  vertexai: true,
-  project: 'lang-481909',
-  location: 'us-central1',
-  googleAuthOptions: {
-    keyFilename: path.join(process.cwd(), 'secrets/lang-481909-7416a55f8e8d.json'),
-  },
-})
 
 // Input validation schema
 const ocrInputSchema = z.object({
@@ -65,24 +46,20 @@ ${text}
 Return ONLY the extracted Arabic text, nothing else.`
   } else {
     // Other languages: Extract only text in target language
-    const languageNames: Record<string, string> = {
-      en: 'English',
-      zh: 'Chinese',
-      ru: 'Russian',
-    }
+    const languageName = getLanguageName(targetLanguage)
     
-    prompt = `Extract only ${languageNames[targetLanguage] || targetLanguage} text from the following content.
+    prompt = `Extract only ${languageName} text from the following content.
 Ignore text in any other languages.
 ${formatInstructions}
 
 Content:
 ${text}
 
-Return ONLY the extracted ${languageNames[targetLanguage] || targetLanguage} text, nothing else.`
+Return ONLY the extracted ${languageName} text, nothing else.`
   }
 
   try {
-    const result = await genAI.models.generateContent({
+    const result = await getGenAIClient().models.generateContent({
       model: BEST_MODEL,
       contents: prompt,
     })
@@ -120,7 +97,7 @@ export const extractTextFromImageFn = createServerFn({method: "POST"})
     
     try {
       // Call Vision API using annotateImage method
-      const [result] = await visionClient.annotateImage(request)
+      const [result] = await getVisionClient().annotateImage(request)
       
       if (!result.fullTextAnnotation?.text) {
         throw new Error('No text detected in image')

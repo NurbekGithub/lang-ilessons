@@ -1,20 +1,7 @@
-import path from 'node:path'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { GoogleGenAI } from '@google/genai'
-
-const BEST_MODEL = "gemini-2.5-flash";
-// const CHEAP_MODEL = "gemini-2.5-flash-lite";
-
-// Initialize Gemini AI client with Vertex AI using service account
-const genAI = new GoogleGenAI({
-  vertexai: true,
-  project: 'lang-481909',
-  location: 'us-central1',
-  googleAuthOptions: {
-    keyFilename: path.join(process.cwd(), 'secrets/lang-481909-7416a55f8e8d.json'),
-  },
-})
+import { getGenAIClient } from './google-clients'
+import { BEST_MODEL, getLanguageName } from './constants'
 
 // Generate AI story
 export const generateStoryFn = createServerFn()
@@ -25,16 +12,7 @@ export const generateStoryFn = createServerFn()
     })
   )
   .handler(async ({ data }) => {
-
-    // Language mapping for prompts
-    const languageMap: Record<string, string> = {
-      ar: 'Arabic',
-      zh: 'Chinese',
-      en: 'English',
-      ru: 'Russian',
-    }
-
-    const languageName = languageMap[data.language] || 'English'
+    const languageName = getLanguageName(data.language)
 
     // Build prompt based on whether description is provided
     let prompt = ''
@@ -66,7 +44,7 @@ Return ONLY the story, nothing else.`
     }
 
     try {
-      const result = await genAI.models.generateContent({
+      const result = await getGenAIClient().models.generateContent({
         model: BEST_MODEL,
         contents: prompt,
       })

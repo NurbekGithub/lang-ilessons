@@ -1,11 +1,6 @@
-import path from 'node:path'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { TextToSpeechClient } from '@google-cloud/text-to-speech'
-
-const client = new TextToSpeechClient({
-  keyFilename: path.join(process.cwd(), 'secrets/lang-481909-7416a55f8e8d.json'),
-})
+import { getTTSClient } from './google-clients'
 
 export const textToSpeechFn = createServerFn()
   .inputValidator(
@@ -25,7 +20,7 @@ export const textToSpeechFn = createServerFn()
       },
     }
 
-    const [response] = await client.synthesizeSpeech(request)
+    const [response] = await getTTSClient().synthesizeSpeech(request)
 
     if (!response.audioContent) {
       throw new Error('No audio content returned from Google TTS')

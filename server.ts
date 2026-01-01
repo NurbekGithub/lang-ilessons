@@ -537,6 +537,8 @@ async function initializeServer() {
       },
     },
 
+    idleTimeout: 60_000,
+
     // Global error handler
     error(error) {
       log.error(
