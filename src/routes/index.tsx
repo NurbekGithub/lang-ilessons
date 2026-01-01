@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { useState } from 'react'
-import { FileText, Languages } from 'lucide-react'
+import { FileText, Languages, Sparkles } from 'lucide-react'
 import type { SavedText } from '@/lib/saved-texts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -9,8 +9,10 @@ import { TextInput } from '@/components/text-input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { OcrInput } from '@/components/ocr-input'
+import { AiStoryInput } from '@/components/ai-story-input'
 import { createTextFn, deleteTextFn, getPublicStoriesFn, getSavedTextsFn } from '@/server-fns/texts'
 import { getSessionFn } from '@/server-fns/session'
+import { generateStoryFn } from '@/server-fns/generate-story'
 
 export const Route = createFileRoute('/')({
   loader: async () => {
@@ -40,11 +42,13 @@ function HomePage() {
   const { publicStories, savedTexts, user } = Route.useLoaderData()
   const createText = useServerFn(createTextFn)
   const deleteText = useServerFn(deleteTextFn)
-  
+  const generateStory = useServerFn(generateStoryFn)
+
   // OCR state
   const [ocrText, setOcrText] = useState('')
   const [ocrLanguage, setOcrLanguage] = useState('auto')
   const [activeTab, setActiveTab] = useState('text')
+  const [isAiSaving, setIsAiSaving] = useState(false)
 
   const handleTextSubmit = async (
     text: string,
@@ -99,6 +103,39 @@ function HomePage() {
     }
   }
 
+  const handleAiStoryGenerate = async (description: string, language: string) => {
+    const result = await generateStory({
+      data: { description, language },
+    })
+    return result
+  }
+
+  const handleAiStartLearning = async (story: string, language: string) => {
+    if (!user?.id) {
+      alert('Please sign in to save and learn AI-generated stories')
+      navigate({ to: '/login' })
+      return
+    }
+
+    setIsAiSaving(true)
+    try {
+      const savedText = await createText({
+        data: {
+          userId: user.id,
+          content: story,
+          sourceLanguage: language,
+          isPublic: false,
+        },
+      })
+      navigate({ to: '/texts/$textId', params: { textId: savedText.id } })
+    } catch (error) {
+      console.error('Failed to save AI story:', error)
+      alert('Failed to save story. Please try again.')
+    } finally {
+      setIsAiSaving(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6 md:py-12">
@@ -150,11 +187,15 @@ function HomePage() {
         {/* Main Content */}
         <main className="space-y-8">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="text">Paste Text</TabsTrigger>
               <TabsTrigger value="ocr">Scan Image</TabsTrigger>
+              <TabsTrigger value="ai">
+                <Sparkles className="w-4 h-4 mr-2" />
+                AI Story
+              </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="text">
               <TextInput
                 onSubmit={handleTextSubmit}
@@ -162,9 +203,17 @@ function HomePage() {
                 initialLanguage={ocrLanguage}
               />
             </TabsContent>
-            
+
             <TabsContent value="ocr">
               <OcrInput onExtract={handleOcrExtract} />
+            </TabsContent>
+
+            <TabsContent value="ai">
+              <AiStoryInput
+                onGenerate={handleAiStoryGenerate}
+                onStartLearning={handleAiStartLearning}
+                isLoading={isAiSaving}
+              />
             </TabsContent>
           </Tabs>
 

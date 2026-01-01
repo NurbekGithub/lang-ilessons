@@ -27,9 +27,12 @@ interface LanguageSelectorProps {
     onChange: (value: string) => void;
     isDetecting?: boolean;
     disabled?: boolean;
+    showAuto?: boolean;
 }
 
-export function LanguageSelector({ value, onChange, isDetecting, disabled }: LanguageSelectorProps) {
+export function LanguageSelector({ value, onChange, isDetecting, disabled, showAuto = true }: LanguageSelectorProps) {
+    const filteredLanguages = showAuto ? LANGUAGES : LANGUAGES.filter(lang => lang.code !== 'auto');
+
     return (
         <div className="flex items-center gap-2">
             <Select value={value} onValueChange={(val) => val && onChange(val)} disabled={disabled}>
@@ -37,7 +40,7 @@ export function LanguageSelector({ value, onChange, isDetecting, disabled }: Lan
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                    {LANGUAGES.map((lang) => (
+                    {filteredLanguages.map((lang) => (
                         <SelectItem key={lang.code} value={lang.code}>
                             {lang.name}
                         </SelectItem>

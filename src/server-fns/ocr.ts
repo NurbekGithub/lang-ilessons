@@ -78,7 +78,7 @@ Return ONLY the extracted Arabic text, nothing else.`
     
     prompt = `Extract only ${languageNames[targetLanguage] || targetLanguage} text from the following content.
 Ignore text in any other languages.
-Keep the text in its original order and structure.
+${formatInstructions}
 
 Content:
 ${text}
