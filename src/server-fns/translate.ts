@@ -22,5 +22,6 @@ export const translateTextFn = createServerFn()
       targetLanguage: data.targetLanguage,
       source: result.source,
       alternatives: result.alternatives,
+      fromCache: result.fromCache,
     }
   })

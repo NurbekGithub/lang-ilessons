@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertCircle, BookmarkPlus, Check, Loader2, Snail, Volume2, X } from "lucide-react";
+import { AlertCircle, BookmarkPlus, Check, Database, Loader2, Snail, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -19,6 +19,7 @@ interface TranslationPopupProps {
     alternatives?: Array<string>;
     isLoading: boolean;
     error?: string | null;
+    fromCache?: boolean;
     onSaveToVocabulary?: (originalText: string, translatedText: string) => Promise<void>;
 }
 
@@ -30,6 +31,7 @@ export function TranslationPopup({
     alternatives,
     isLoading,
     error,
+    fromCache,
     onSaveToVocabulary,
 }: TranslationPopupProps) {
     const [isSaving, setIsSaving] = useState(false);
@@ -144,14 +146,24 @@ export function TranslationPopup({
                             <p className="font-medium text-primary break-words leading-tight">
                                 {translatedText}
                             </p>
-                            {source === "libretranslate" && (
-                                <div className="flex shrink-0 items-center justify-center text-amber-500 cursor-help group relative">
-                                    <AlertCircle className="w-4 h-4" />
-                                    <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-popover border rounded shadow-lg text-[10px] normal-case text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                        Google Translate is currently unavailable. Using degraded backup translation.
+                            <div className="flex shrink-0 items-center gap-1">
+                                {fromCache && (
+                                    <div className="flex shrink-0 items-center justify-center text-emerald-500 cursor-help group relative">
+                                        <Database className="w-4 h-4" />
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-popover border rounded shadow-lg text-[10px] normal-case text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                            Translation loaded from cache
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                                {source === "libretranslate" && (
+                                    <div className="flex shrink-0 items-center justify-center text-amber-500 cursor-help group relative">
+                                        <AlertCircle className="w-4 h-4" />
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-popover border rounded shadow-lg text-[10px] normal-case text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                            Google Translate is currently unavailable. Using degraded backup translation.
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Alternative translations */}

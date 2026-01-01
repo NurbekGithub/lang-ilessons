@@ -8,6 +8,7 @@ interface TranslationResult {
     targetLanguage: string;
     source: "google" | "libretranslate";
     alternatives?: Array<string>;
+    fromCache?: boolean;
 }
 
 interface UseTranslationOptions {

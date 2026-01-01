@@ -1,3 +1,9 @@
+import {
+  cacheTranslation,
+  generateCacheKey,
+  getCachedTranslation,
+} from "./redis";
+
 const LIBRETRANSLATE_URL = process.env.LIBRETRANSLATE_URL || "https://libretranslate.com";
 const LIBRETRANSLATE_API_KEY = process.env.LIBRETRANSLATE_API_KEY;
 const GCP_TRANSLATE_API_KEY = process.env.GCP_TRANSLATE_API_KEY;
@@ -13,10 +19,11 @@ export interface TranslateResult {
     detectedLanguage?: string;
     alternatives?: Array<string>;
     source: "google" | "libretranslate";
+    fromCache?: boolean; // Indicates if translation came from Redis cache
 }
 
 /**
- * Translate text using Google Translate API
+ * Translate text using Google Translate API with Redis caching
  */
 async function translateWithGoogle(options: TranslateOptions): Promise<TranslateResult> {
     if (!GCP_TRANSLATE_API_KEY) {
@@ -24,6 +31,22 @@ async function translateWithGoogle(options: TranslateOptions): Promise<Translate
     }
 
     const { text, sourceLanguage = "auto", targetLanguage } = options;
+
+    // Check Redis cache first
+    const cacheKey = generateCacheKey(text, sourceLanguage, targetLanguage);
+    const cached = await getCachedTranslation(cacheKey);
+
+    if (cached) {
+        console.log(`Cache hit for translation: ${text}`);
+        return {
+            translatedText: cached.translatedText,
+            detectedLanguage: cached.detectedLanguage,
+            source: "google",
+            fromCache: true,
+        };
+    }
+
+    // Cache miss - call Google Translate API
     const url = `https://translation.googleapis.com/language/translate/v2?key=${GCP_TRANSLATE_API_KEY}`;
 
     const response = await fetch(url, {
@@ -47,15 +70,24 @@ async function translateWithGoogle(options: TranslateOptions): Promise<Translate
     const data = await response.json();
     const translation = data.data.translations[0];
 
-    return {
+    const result = {
         translatedText: translation.translatedText,
         detectedLanguage: translation.detectedSourceLanguage,
-        source: "google",
+        source: "google" as const,
+        fromCache: false,
     };
+
+    // Cache the successful translation
+    await cacheTranslation(cacheKey, {
+        translatedText: result.translatedText,
+        detectedLanguage: result.detectedLanguage,
+    });
+
+    return result;
 }
 
 /**
- * Translate text using LibreTranslate API
+ * Translate text using LibreTranslate API (no caching)
  */
 async function translateWithLibre(options: TranslateOptions): Promise<TranslateResult> {
     const { text, sourceLanguage = "auto", targetLanguage } = options;
@@ -87,22 +119,24 @@ async function translateWithLibre(options: TranslateOptions): Promise<TranslateR
         detectedLanguage: data.detectedLanguage?.language,
         alternatives: data.alternatives,
         source: "libretranslate",
+        fromCache: false,
     };
 }
 
 /**
  * Translate text with fallback logic (Google -> LibreTranslate)
+ * Only Google translations are cached
  */
 export async function translateText(options: TranslateOptions): Promise<TranslateResult> {
     if (process.env.NODE_ENV === 'development') {
         return await translateWithLibre(options);
     }
     try {
-        // Try Google first
+        // Try Google first (with caching)
         return await translateWithGoogle(options);
     } catch (error) {
         console.warn("Google Translate failed, falling back to LibreTranslate:", error);
-        // Fallback to LibreTranslate
+        // Fallback to LibreTranslate (no caching)
         return await translateWithLibre(options);
     }
 }

@@ -17,6 +17,11 @@ export const BEST_MODEL = 'gemini-2.5-flash'
 export const CHEAP_MODEL = 'gemini-2.5-flash-lite'
 
 /**
+ * Translation Cache Configuration
+ */
+export const TRANSLATION_CACHE_TTL = 604800 // 7 days in seconds
+
+/**
  * Language Code to Name Mapping
  */
 export const LANGUAGE_MAP: Record<string, string> = {

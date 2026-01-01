@@ -159,6 +159,7 @@ export function TextDisplay({
             alternatives={result?.alternatives}
             isLoading={isLoading}
             error={error}
+            fromCache={result?.fromCache}
             onSaveToVocabulary={
               session?.user ? handleSaveToVocabulary : undefined
             }
