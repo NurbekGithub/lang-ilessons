@@ -17,7 +17,7 @@ export function AiStoryInput({
   isLoading = false,
 }: AiStoryInputProps) {
   const [description, setDescription] = useState('')
-  const [language, setLanguage] = useState('en')
+  const [language, setLanguage] = useState('ar')
   const [generatedStory, setGeneratedStory] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
 
