@@ -537,7 +537,7 @@ async function initializeServer() {
       },
     },
 
-    idleTimeout: 60_000,
+    idleTimeout: 60,
 
     // Global error handler
     error(error) {
