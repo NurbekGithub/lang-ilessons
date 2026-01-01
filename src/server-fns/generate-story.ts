@@ -47,6 +47,7 @@ Requirements:
 - Use natural, authentic ${languageName}
 - Include clear dialogue and narrative flow
 - End with a satisfying conclusion
+- If it is arabic, make sure all the words are with proper harakat.
 
 Return ONLY the story, nothing else.`
     } else {
@@ -59,6 +60,7 @@ Requirements:
 - Use natural, authentic ${languageName}
 - Include clear dialogue and narrative flow
 - End with a satisfying conclusion
+- If it is arabic, make sure all the words are with proper harakat.
 
 Return ONLY the story, nothing else.`
     }

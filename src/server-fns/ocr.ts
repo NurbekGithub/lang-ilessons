@@ -3,6 +3,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { ImageAnnotatorClient } from '@google-cloud/vision'
 import { GoogleGenAI } from '@google/genai'
+import { arabicInstructions, formatInstructions } from './instructions'
 
 const BEST_MODEL = "gemini-2.5-flash";
 // const CHEAP_MODEL = "gemini-2.5-flash-lite";
@@ -27,12 +28,6 @@ const ocrInputSchema = z.object({
   imageData: z.string(), // Base64 encoded image
   languageHint: z.string().optional(), // 'auto', 'en', 'ar', 'zh', 'ru'
 })
-
-const formatInstructions = `Format and correct the text properly by meaning
-so it is easier to read and understant, but don't add anything new.`
-const arabicInstructions = `
-if there a word is missing harakat, add it. make sure all the words are with proper harakat.
-`
 
 /**
  * Filter text by language using Gemini AI
