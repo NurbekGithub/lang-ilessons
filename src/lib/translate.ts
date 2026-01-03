@@ -33,18 +33,18 @@ async function translateWithGoogle(options: TranslateOptions): Promise<Translate
     const { text, sourceLanguage = "auto", targetLanguage } = options;
 
     // Check Redis cache first
-    const cacheKey = generateCacheKey(text, sourceLanguage, targetLanguage);
-    const cached = await getCachedTranslation(cacheKey);
+    // const cacheKey = generateCacheKey(text, sourceLanguage, targetLanguage);
+    // const cached = await getCachedTranslation(cacheKey);
 
-    if (cached) {
-        console.log(`Cache hit for translation: ${text}`);
-        return {
-            translatedText: cached.translatedText,
-            detectedLanguage: cached.detectedLanguage,
-            source: "google",
-            fromCache: true,
-        };
-    }
+    // if (cached) {
+    //     console.log(`Cache hit for translation: ${text}`);
+    //     return {
+    //         translatedText: cached.translatedText,
+    //         detectedLanguage: cached.detectedLanguage,
+    //         source: "google",
+    //         fromCache: true,
+    //     };
+    // }
 
     // Cache miss - call Google Translate API
     const url = `https://translation.googleapis.com/language/translate/v2?key=${GCP_TRANSLATE_API_KEY}`;
