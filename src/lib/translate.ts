@@ -78,10 +78,10 @@ async function translateWithGoogle(options: TranslateOptions): Promise<Translate
     };
 
     // Cache the successful translation
-    await cacheTranslation(cacheKey, {
-        translatedText: result.translatedText,
-        detectedLanguage: result.detectedLanguage,
-    });
+    // await cacheTranslation(cacheKey, {
+    //     translatedText: result.translatedText,
+    //     detectedLanguage: result.detectedLanguage,
+    // });
 
     return result;
 }
